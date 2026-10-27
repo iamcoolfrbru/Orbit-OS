@@ -1,0 +1,381 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Music Player</title>
+  <style>
+    * { box-sizing: border-box; }
+
+    :root {
+      color-scheme: dark;
+      --cyan: #8be9fd;
+      --gold: #f4d77a;
+    }
+
+    body {
+      min-height: 100vh;
+      margin: 0;
+      display: grid;
+      place-items: center;
+      padding: 20px;
+      background: #05070a;
+      color: #fff;
+      font-family: "Courier New", monospace;
+    }
+
+    .music-player {
+      width: min(440px, 100%);
+      padding: 18px;
+      border: 1px solid rgba(139, 233, 253, 0.36);
+      border-radius: 10px;
+      background: linear-gradient(125deg, rgba(139, 233, 253, 0.09), transparent 56%), rgba(5, 12, 20, 0.94);
+      box-shadow: 0 18px 50px rgba(0, 0, 0, 0.5), inset 0 1px rgba(255, 255, 255, 0.06);
+    }
+
+    h1 {
+      margin: 0 0 14px;
+      color: var(--cyan);
+      font-size: 0.8rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+
+    .track {
+      display: grid;
+      grid-template-columns: 46px minmax(0, 1fr) 92px;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 16px;
+      padding: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 6px;
+      background: rgba(0, 0, 0, 0.34);
+    }
+
+    .note {
+      display: grid;
+      width: 46px;
+      height: 46px;
+      place-items: center;
+      border: 1px solid rgba(139, 233, 253, 0.32);
+      border-radius: 5px;
+      background: linear-gradient(145deg, rgba(139, 233, 253, 0.2), rgba(244, 215, 122, 0.08));
+      color: var(--gold);
+      font-family: Georgia, serif;
+      font-size: 1.7rem;
+    }
+
+    .track-copy { min-width: 0; overflow-wrap: anywhere; }
+    .track-copy strong { display: block; }
+    .track-copy p { margin: 5px 0 0; color: rgba(255, 255, 255, 0.7); font-size: 0.75rem; }
+
+    button, select, input { font: inherit; }
+
+    button {
+      min-height: 40px;
+      border: 1px solid rgba(139, 233, 253, 0.7);
+      border-radius: 5px;
+      background: rgba(139, 233, 253, 0.12);
+      color: #d5faff;
+      cursor: pointer;
+    }
+
+    button:hover { background: rgba(139, 233, 253, 0.22); }
+    button:focus-visible, select:focus-visible, input:focus-visible { outline: 2px solid var(--cyan); outline-offset: 2px; }
+
+    .progress { margin: 0 2px 16px; }
+    .times { display: flex; justify-content: space-between; color: rgba(255, 255, 255, 0.68); font-size: 0.68rem; }
+
+    input[type="range"] {
+      width: 100%;
+      accent-color: var(--cyan);
+      cursor: pointer;
+    }
+
+    .row {
+      display: grid;
+      gap: 8px;
+      margin-top: 12px;
+      color: rgba(255, 255, 255, 0.76);
+      font-size: 0.72rem;
+    }
+
+    .select-row { display: flex; gap: 8px; }
+    .select-row select { flex: 1; }
+
+    select {
+      width: 100%;
+      min-height: 42px;
+      padding: 8px 10px;
+      border: 1px solid rgba(139, 233, 253, 0.36);
+      border-radius: 4px;
+      background: #080d14;
+      color: #fff;
+    }
+
+    select option { background: #080d14; }
+
+    input[type="file"] {
+      width: 100%;
+      min-height: 42px;
+      padding: 5px;
+      border: 1px dashed rgba(255, 255, 255, 0.3);
+      border-radius: 4px;
+      color: rgba(255, 255, 255, 0.72);
+      font-size: 0.7rem;
+    }
+
+    input[type="file"]::file-selector-button {
+      margin-right: 10px;
+      padding: 7px 9px;
+      border: 1px solid rgba(139, 233, 253, 0.42);
+      border-radius: 3px;
+      background: rgba(139, 233, 253, 0.1);
+      color: #d5faff;
+      cursor: pointer;
+      font: inherit;
+    }
+
+    .volume {
+      display: grid;
+      grid-template-columns: minmax(70px, 1fr) 42px;
+      align-items: center;
+      gap: 12px;
+      margin-top: 16px;
+      padding-top: 12px;
+      border-top: 1px solid rgba(255, 255, 255, 0.12);
+      color: rgba(255, 255, 255, 0.76);
+      font-size: 0.72rem;
+    }
+
+    .volume strong { color: var(--gold); text-align: right; }
+
+    @media (max-width: 420px) {
+      .track { grid-template-columns: 40px minmax(0, 1fr); }
+      .track button { grid-column: 1 / -1; }
+      .select-row { align-items: stretch; flex-direction: column; }
+    }
+  </style>
+</head>
+<body>
+  <main class="music-player">
+    <h1>Music</h1>
+    <div class="track">
+      <span class="note" aria-hidden="true">♫</span>
+      <div class="track-copy">
+        <strong id="trackName">No track selected</strong>
+        <p id="status" role="status" aria-live="polite">Paused</p>
+      </div>
+      <button id="toggle" type="button" aria-pressed="false">Play</button>
+    </div>
+
+    <div class="progress">
+      <div class="times" aria-hidden="true">
+        <span id="elapsed">0:00</span>
+        <span id="duration">0:00</span>
+      </div>
+      <input id="progress" type="range" min="0" max="1000" step="1" value="0" aria-label="Song position">
+    </div>
+
+    <label class="row">
+      <span>Soundtrack</span>
+      <div class="select-row">
+        <select id="song">
+          <option value="">Select a song</option>
+          <option value="assets/youtube-audio.mp3">Gozalo Slowed</option>
+          <option value="assets/youtube-audio (1).mp3">I’ll Kick Your Butt in Smash Bros</option>
+          <option value="assets/youtube-audio (2).mp3">Sanya Tekk</option>
+          <option value="assets/youtube-audio (3).mp3">Handmade</option>
+          <option value="assets/BRAIN FART FUNK.mp3">Brain Fart Funk</option>
+          <option value="assets/Femboy Friday.mp3">Femboy Friday</option>
+          <option value="assets/Emmet_Pokemon_Masters_EX_EN_-_Femboy_Friday_AI_cover_(mp3.pm).mp3">Emmet Pokémon Masters EX EN · Femboy Friday (AI Cover)</option>
+          <option value="assets/HELLBLADE - SANYA TEKK (slowed) [mp3uk.net].mp3">Hellblade - Sanya Tekk (Slowed)</option>
+          <option value="assets/It’s me It’s Verity Indian Version Vindaloo Singh.mp3">It’s Me, It’s Verity: Vindaloo Singh</option>
+          <option value="assets/Gobble Glitch (Blackgrass Glitch Mix).mp3">Gobble Glitch (Blackgrass Glitch Mix)</option>
+          <option value="assets/Nuts Bigger Than Yours.mp3">Nuts Bigger Than Yours</option>
+          <option value="assets/We Only Guzzle Diesel.mp3">We Only Guzzle Diesel</option>
+          <option value="assets/We Only Guzzle Diesel (EARRAPE).mp3">We Only Guzzle Diesel (EARRAPE)</option>
+        </select>
+        <button id="loop" type="button" aria-pressed="false">Loop: Off</button>
+      </div>
+    </label>
+
+    <label class="row">
+      <span>Import an MP3 or MP4 file</span>
+      <input id="file" type="file" accept=".mp3,.mp4,audio/mpeg,audio/mp4,video/mp4">
+    </label>
+
+    <label class="volume">
+      <span>Volume</span>
+      <strong id="volumeValue">35%</strong>
+      <input id="volume" type="range" min="0" max="100" step="1" value="35" aria-label="Volume">
+    </label>
+
+    <audio id="audio" preload="metadata" hidden></audio>
+  </main>
+
+  <script>
+    const audio = document.getElementById("audio");
+    const toggleButton = document.getElementById("toggle");
+    const loopButton = document.getElementById("loop");
+    const volumeControl = document.getElementById("volume");
+    const volumeValue = document.getElementById("volumeValue");
+    const status = document.getElementById("status");
+    const trackName = document.getElementById("trackName");
+    const progressControl = document.getElementById("progress");
+    const elapsed = document.getElementById("elapsed");
+    const duration = document.getElementById("duration");
+    const fileControl = document.getElementById("file");
+    const songSelect = document.getElementById("song");
+
+    let importedUrl = null;
+    let loopEnabled = false;
+
+    function formatTime(time) {
+      if (!Number.isFinite(time) || time < 0) return "0:00";
+      const seconds = Math.floor(time);
+      return `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, "0")}`;
+    }
+
+    function updateProgress() {
+      const canSeek = Number.isFinite(audio.duration) && audio.duration > 0;
+      progressControl.disabled = !canSeek;
+      progressControl.value = canSeek
+        ? String(Math.round((audio.currentTime / audio.duration) * 1000))
+        : "0";
+      elapsed.textContent = formatTime(audio.currentTime);
+      duration.textContent = formatTime(audio.duration);
+      progressControl.setAttribute(
+        "aria-valuetext",
+        `${formatTime(audio.currentTime)} of ${formatTime(audio.duration)}`
+      );
+    }
+
+    function setStoppedState() {
+      toggleButton.textContent = "Play";
+      toggleButton.setAttribute("aria-pressed", "false");
+    }
+
+    function clearImportedSource() {
+      if (importedUrl) {
+        URL.revokeObjectURL(importedUrl);
+        importedUrl = null;
+      }
+    }
+
+    async function togglePlayback() {
+      if (!audio.hasAttribute("src")) {
+        status.textContent = "Select or import a track first";
+        return;
+      }
+
+      if (!audio.paused) {
+        audio.pause();
+        setStoppedState();
+        status.textContent = "Paused";
+        return;
+      }
+
+      try {
+        await audio.play();
+        toggleButton.textContent = "Pause";
+        toggleButton.setAttribute("aria-pressed", "true");
+        status.textContent = "Playing";
+      } catch (error) {
+        status.textContent = "Unable to play this file in your browser";
+        setStoppedState();
+        console.error(error);
+      }
+    }
+
+    toggleButton.addEventListener("click", togglePlayback);
+
+    loopButton.addEventListener("click", () => {
+      loopEnabled = !loopEnabled;
+      audio.loop = loopEnabled;
+      loopButton.textContent = `Loop: ${loopEnabled ? "On" : "Off"}`;
+      loopButton.setAttribute("aria-pressed", String(loopEnabled));
+      if (loopEnabled && audio.ended) audio.play();
+    });
+
+    songSelect.addEventListener("change", () => {
+      const option = songSelect.selectedOptions[0];
+      if (!songSelect.value) return;
+
+      audio.pause();
+      clearImportedSource();
+      audio.src = songSelect.value;
+      audio.loop = loopEnabled;
+      audio.volume = Number(volumeControl.value) / 100;
+      trackName.textContent = option.textContent;
+      status.textContent = "Paused";
+      fileControl.value = "";
+      setStoppedState();
+      audio.load();
+    });
+
+    fileControl.addEventListener("change", () => {
+      const file = fileControl.files[0];
+      if (!file) return;
+      if (!/\.(mp3|mp4)$/i.test(file.name)) {
+        status.textContent = "Choose an MP3 or MP4 file";
+        fileControl.value = "";
+        return;
+      }
+
+      audio.pause();
+      clearImportedSource();
+      importedUrl = URL.createObjectURL(file);
+      audio.src = importedUrl;
+      audio.loop = loopEnabled;
+      audio.volume = Number(volumeControl.value) / 100;
+      trackName.textContent = file.name;
+      status.textContent = "Paused";
+      songSelect.value = "";
+      setStoppedState();
+      audio.load();
+    });
+
+    progressControl.addEventListener("input", () => {
+      if (Number.isFinite(audio.duration)) {
+        audio.currentTime = (Number(progressControl.value) / 1000) * audio.duration;
+        updateProgress();
+      }
+    });
+
+    volumeControl.addEventListener("input", () => {
+      const volume = Number(volumeControl.value);
+      volumeValue.textContent = `${volume}%`;
+      audio.volume = volume / 100;
+    });
+
+    audio.addEventListener("loadedmetadata", updateProgress);
+    audio.addEventListener("durationchange", updateProgress);
+    audio.addEventListener("timeupdate", updateProgress);
+    audio.addEventListener("play", () => {
+      toggleButton.textContent = "Pause";
+      toggleButton.setAttribute("aria-pressed", "true");
+      status.textContent = "Playing";
+    });
+    audio.addEventListener("pause", () => {
+      if (!audio.ended) status.textContent = "Paused";
+      setStoppedState();
+    });
+    audio.addEventListener("ended", () => {
+      setStoppedState();
+      status.textContent = "Finished";
+    });
+    audio.addEventListener("error", () => {
+      if (audio.hasAttribute("src")) {
+        setStoppedState();
+        status.textContent = "Unable to load this file";
+        updateProgress();
+      }
+    });
+
+    audio.volume = Number(volumeControl.value) / 100;
+    window.addEventListener("beforeunload", clearImportedSource);
+  </script>
+</body>
+</html>
