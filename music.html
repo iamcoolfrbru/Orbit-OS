@@ -21,7 +21,8 @@
       padding: 20px;
       background: #05070a;
       color: #fff;
-      font-family: "Courier New", monospace;
+      font-family: "Avenir Next", "Segoe UI", sans-serif;
+      -webkit-font-smoothing: antialiased;
     }
 
     .music-player {
@@ -36,8 +37,10 @@
     h1 {
       margin: 0 0 14px;
       color: var(--cyan);
-      font-size: 0.8rem;
-      letter-spacing: 0.1em;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: 1.05rem;
+      font-weight: 500;
+      letter-spacing: 0.02em;
       text-transform: uppercase;
     }
 
@@ -67,7 +70,13 @@
     }
 
     .track-copy { min-width: 0; overflow-wrap: anywhere; }
-    .track-copy strong { display: block; }
+    .track-copy strong {
+      display: block;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: 1rem;
+      font-weight: 500;
+      line-height: 1.2;
+    }
     .track-copy p { margin: 5px 0 0; color: rgba(255, 255, 255, 0.7); font-size: 0.75rem; }
 
     button, select, input { font: inherit; }
@@ -79,6 +88,7 @@
       background: rgba(139, 233, 253, 0.12);
       color: #d5faff;
       cursor: pointer;
+      font-weight: 600;
     }
 
     button:hover { background: rgba(139, 233, 253, 0.22); }
@@ -98,7 +108,8 @@
       gap: 8px;
       margin-top: 12px;
       color: rgba(255, 255, 255, 0.76);
-      font-size: 0.72rem;
+      font-size: 0.75rem;
+      font-weight: 600;
     }
 
     .select-row { display: flex; gap: 8px; }
@@ -112,6 +123,7 @@
       border-radius: 4px;
       background: #080d14;
       color: #fff;
+      font-weight: 500;
     }
 
     select option { background: #080d14; }
