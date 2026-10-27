@@ -18,13 +18,33 @@
       margin: 0;
       display: grid;
       place-items: center;
+      overflow-x: hidden;
       padding: 20px;
-      background: #05070a;
+      background:
+        radial-gradient(circle at 20% 20%, rgba(139, 233, 253, 0.09), transparent 28%),
+        radial-gradient(circle at 82% 74%, rgba(244, 215, 122, 0.07), transparent 24%),
+        #05070a;
       color: #fff;
       font-family: "Segoe UI", Arial, sans-serif;
       font-variant-ligatures: normal;
       letter-spacing: 0;
       -webkit-font-smoothing: antialiased;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: -30%;
+      z-index: -1;
+      background:
+        linear-gradient(115deg, transparent 38%, rgba(139, 233, 253, 0.025) 49%, transparent 60%),
+        linear-gradient(20deg, transparent 43%, rgba(244, 215, 122, 0.018) 50%, transparent 58%);
+      animation: drift 18s ease-in-out infinite alternate;
+    }
+
+    @keyframes drift {
+      from { transform: translate3d(-2%, -1%, 0) rotate(-2deg); }
+      to { transform: translate3d(3%, 2%, 0) rotate(2deg); }
     }
 
     .music-player {
@@ -34,6 +54,12 @@
       border-radius: 10px;
       background: linear-gradient(125deg, rgba(139, 233, 253, 0.09), transparent 56%), rgba(5, 12, 20, 0.94);
       box-shadow: 0 18px 50px rgba(0, 0, 0, 0.5), inset 0 1px rgba(255, 255, 255, 0.06);
+      animation: player-in 560ms cubic-bezier(0.16, 1, 0.3, 1) both;
+    }
+
+    @keyframes player-in {
+      from { opacity: 0; transform: translateY(14px) scale(0.985); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
     }
 
     h1 {
@@ -117,21 +143,77 @@
       font-weight: 600;
     }
 
-    .select-row { display: flex; gap: 8px; }
-    .select-row select { flex: 1; }
+    .track-picker { position: relative; }
 
-    select {
+    .search-row {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 8px;
+      align-items: center;
+    }
+
+    #trackSearch {
       width: 100%;
       min-height: 42px;
-      padding: 8px 10px;
+      padding: 9px 11px;
       border: 1px solid rgba(139, 233, 253, 0.36);
       border-radius: 4px;
       background: #080d14;
       color: #fff;
-      font-weight: 500;
     }
 
-    select option { background: #080d14; }
+    #trackSearch::placeholder { color: rgba(255, 255, 255, 0.48); }
+
+    .track-menu {
+      position: absolute;
+      top: calc(100% + 6px);
+      left: 0;
+      right: 0;
+      z-index: 5;
+      max-height: min(280px, 45vh);
+      overflow-y: auto;
+      margin: 0;
+      padding: 5px;
+      border: 1px solid rgba(139, 233, 253, 0.36);
+      border-radius: 4px;
+      background: rgba(8, 13, 20, 0.98);
+      box-shadow: 0 18px 36px rgba(0, 0, 0, 0.48);
+      list-style: none;
+      opacity: 0;
+      visibility: hidden;
+      transform: translateY(-8px) scaleY(0.96);
+      transform-origin: top;
+      transition: opacity 160ms ease, transform 160ms ease, visibility 160ms;
+    }
+
+    .track-picker.open .track-menu {
+      opacity: 1;
+      visibility: visible;
+      transform: translateY(0) scaleY(1);
+    }
+
+    .track-menu button {
+      width: 100%;
+      min-height: 38px;
+      border: 0;
+      border-radius: 3px;
+      background: transparent;
+      text-align: left;
+      font-size: 0.78rem;
+      font-weight: 500;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .track-menu button:hover,
+    .track-menu button:focus-visible { background: rgba(139, 233, 253, 0.12); }
+
+    .track-menu .empty-result {
+      padding: 12px 10px;
+      color: rgba(255, 255, 255, 0.58);
+      font-size: 0.78rem;
+    }
 
     input[type="file"] {
       width: 100%;
@@ -171,7 +253,8 @@
     @media (max-width: 420px) {
       .track { grid-template-columns: 40px minmax(0, 1fr); }
       .track button { grid-column: 1 / -1; }
-      .select-row { align-items: stretch; flex-direction: column; }
+      .search-row { grid-template-columns: 1fr; }
+      .search-row button { width: 100%; }
     }
   </style>
 </head>
@@ -195,15 +278,16 @@
       <input id="progress" type="range" min="0" max="1000" step="1" value="0" aria-label="Song position">
     </div>
 
-    <label class="row">
+    <div class="row">
       <span>Soundtrack</span>
-      <div class="select-row">
-        <select id="song">
-          <option value="">Select a song</option>
-        </select>
-        <button id="loop" type="button" aria-pressed="false">Loop: Off</button>
+      <div class="track-picker" id="trackPicker">
+        <div class="search-row">
+          <input id="trackSearch" type="search" placeholder="Search songs" autocomplete="off" aria-label="Search songs" aria-controls="trackMenu" aria-expanded="false">
+          <button id="loop" type="button" aria-pressed="false">Loop: Off</button>
+        </div>
+        <ul class="track-menu" id="trackMenu" role="listbox"></ul>
       </div>
-    </label>
+    </div>
 
     <label class="row">
       <span>Import an MP3 or MP4 file</span>
@@ -231,7 +315,9 @@
     const elapsed = document.getElementById("elapsed");
     const duration = document.getElementById("duration");
     const fileControl = document.getElementById("file");
-    const songSelect = document.getElementById("song");
+    const trackPicker = document.getElementById("trackPicker");
+    const trackSearch = document.getElementById("trackSearch");
+    const trackMenu = document.getElementById("trackMenu");
 
     const tracks = [
       "2008.mp3",
@@ -277,11 +363,45 @@
       "youtube-audio.mp3"
     ];
 
-    for (const filename of tracks) {
-      const option = document.createElement("option");
-      option.value = `assets/${filename}`;
-      option.textContent = filename.replace(/\.mp3$/i, "");
-      songSelect.append(option);
+    const trackChoices = tracks.map((filename) => ({
+      filename,
+      title: filename.replace(/\.mp3$/i, "")
+    }));
+
+    function openTrackMenu() {
+      trackPicker.classList.add("open");
+      trackSearch.setAttribute("aria-expanded", "true");
+    }
+
+    function closeTrackMenu() {
+      trackPicker.classList.remove("open");
+      trackSearch.setAttribute("aria-expanded", "false");
+    }
+
+    function renderTrackMenu(query = "") {
+      const matches = trackChoices.filter(({ title }) =>
+        title.toLowerCase().includes(query.trim().toLowerCase())
+      );
+      trackMenu.replaceChildren();
+
+      if (!matches.length) {
+        const empty = document.createElement("li");
+        empty.className = "empty-result";
+        empty.textContent = "No matching songs";
+        trackMenu.append(empty);
+        return;
+      }
+
+      matches.forEach(({ filename, title }) => {
+        const item = document.createElement("li");
+        item.setAttribute("role", "option");
+        const choice = document.createElement("button");
+        choice.type = "button";
+        choice.textContent = title;
+        choice.addEventListener("click", () => selectTrack(filename, title));
+        item.append(choice);
+        trackMenu.append(item);
+      });
     }
 
     let importedUrl = null;
@@ -354,21 +474,37 @@
       if (loopEnabled && audio.ended) audio.play();
     });
 
-    songSelect.addEventListener("change", () => {
-      const option = songSelect.selectedOptions[0];
-      if (!songSelect.value) return;
-
+    function selectTrack(filename, title) {
       audio.pause();
       clearImportedSource();
-      audio.src = songSelect.value;
+      audio.src = `assets/${filename}`;
       audio.loop = loopEnabled;
       audio.volume = Number(volumeControl.value) / 100;
-      trackName.textContent = option.textContent;
+      trackName.textContent = title;
+      trackSearch.value = title;
       status.textContent = "Paused";
       fileControl.value = "";
       setStoppedState();
+      closeTrackMenu();
       audio.load();
+    }
+
+    trackSearch.addEventListener("focus", openTrackMenu);
+    trackSearch.addEventListener("input", () => {
+      renderTrackMenu(trackSearch.value);
+      openTrackMenu();
     });
+    document.addEventListener("pointerdown", (event) => {
+      if (!trackPicker.contains(event.target)) closeTrackMenu();
+    });
+    trackSearch.addEventListener("keydown", (event) => {
+      if (event.key === "Escape") {
+        closeTrackMenu();
+        trackSearch.blur();
+      }
+    });
+
+    renderTrackMenu();
 
     fileControl.addEventListener("change", () => {
       const file = fileControl.files[0];
@@ -387,7 +523,9 @@
       audio.volume = Number(volumeControl.value) / 100;
       trackName.textContent = file.name;
       status.textContent = "Paused";
-      songSelect.value = "";
+      trackSearch.value = "";
+      renderTrackMenu();
+      closeTrackMenu();
       setStoppedState();
       audio.load();
     });
