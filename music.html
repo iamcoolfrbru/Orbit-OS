@@ -5,14 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Music Player</title>
   <style>
-    @font-face {
-      font-family: "Stencil PTX";
-      src: url("assets/StencilPtxSprayedDemo-j9MAM.ttf") format("truetype");
-      font-style: normal;
-      font-weight: 400;
-      font-display: swap;
-    }
-
     * { box-sizing: border-box; }
 
     :root {
@@ -29,7 +21,9 @@
       padding: 20px;
       background: #05070a;
       color: #fff;
-      font-family: "Avenir Next", "Segoe UI", sans-serif;
+      font-family: "Segoe UI", Arial, sans-serif;
+      font-variant-ligatures: normal;
+      letter-spacing: 0;
       -webkit-font-smoothing: antialiased;
     }
 
@@ -43,12 +37,14 @@
     }
 
     h1 {
+      display: inline-block;
       margin: 0 0 14px;
       color: var(--cyan);
-      font-family: "Stencil PTX", fantasy;
+      font-family: inherit;
       font-size: 1.15rem;
       font-weight: 400;
-      letter-spacing: 0.04em;
+      letter-spacing: 0;
+      line-height: 1.35;
       text-transform: uppercase;
     }
 
@@ -73,17 +69,18 @@
       border-radius: 5px;
       background: linear-gradient(145deg, rgba(139, 233, 253, 0.2), rgba(244, 215, 122, 0.08));
       color: var(--gold);
-      font-family: Georgia, serif;
+      font-family: inherit;
       font-size: 1.7rem;
     }
 
     .track-copy { min-width: 0; overflow-wrap: anywhere; }
     .track-copy strong {
       display: block;
-      font-family: "Stencil PTX", fantasy;
+      font-family: inherit;
       font-size: 1rem;
       font-weight: 400;
-      line-height: 1.25;
+      line-height: 1.45;
+      overflow-wrap: anywhere;
     }
     .track-copy p { margin: 5px 0 0; color: rgba(255, 255, 255, 0.7); font-size: 0.75rem; }
 
