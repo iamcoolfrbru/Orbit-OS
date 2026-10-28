@@ -152,6 +152,48 @@
       align-items: center;
     }
 
+    .loop-control { position: relative; }
+
+    .loop-menu {
+      position: absolute;
+      top: calc(100% + 6px);
+      right: 0;
+      z-index: 8;
+      display: grid;
+      width: 150px;
+      gap: 4px;
+      padding: 5px;
+      border: 1px solid rgba(139, 233, 253, 0.36);
+      border-radius: 4px;
+      background: rgba(8, 13, 20, 0.98);
+      box-shadow: 0 18px 36px rgba(0, 0, 0, 0.48);
+      opacity: 0;
+      visibility: hidden;
+      transform: translateY(-8px) scaleY(0.96);
+      transform-origin: top;
+      transition: opacity 160ms ease, transform 160ms ease, visibility 160ms;
+    }
+
+    .loop-control.open .loop-menu {
+      opacity: 1;
+      visibility: visible;
+      transform: translateY(0) scaleY(1);
+    }
+
+    .loop-menu button {
+      width: 100%;
+      min-height: 36px;
+      border: 0;
+      background: transparent;
+      text-align: left;
+      font-size: 0.78rem;
+      font-weight: 500;
+    }
+
+    .loop-menu button:hover,
+    .loop-menu button:focus-visible,
+    .loop-menu button.active { background: rgba(139, 233, 253, 0.12); }
+
     #trackSearch {
       width: 100%;
       min-height: 42px;
@@ -215,6 +257,57 @@
       font-size: 0.78rem;
     }
 
+    .queue {
+      display: grid;
+      gap: 8px;
+      margin-top: 10px;
+      padding-top: 10px;
+      border-top: 1px solid rgba(255, 255, 255, 0.12);
+    }
+
+    .queue-heading {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      color: rgba(255, 255, 255, 0.76);
+      font-size: 0.72rem;
+      font-weight: 600;
+    }
+
+    .queue-heading strong {
+      color: var(--gold);
+      font-size: 0.68rem;
+    }
+
+    .queue-list {
+      display: grid;
+      gap: 4px;
+      max-height: 150px;
+      overflow-y: auto;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .queue-list li {
+      display: grid;
+      grid-template-columns: 24px minmax(0, 1fr);
+      gap: 7px;
+      align-items: center;
+      min-height: 30px;
+      padding: 4px 6px;
+      border-radius: 3px;
+      color: rgba(255, 255, 255, 0.75);
+      font-size: 0.72rem;
+    }
+
+    .queue-list li.current {
+      background: rgba(139, 233, 253, 0.12);
+      color: #d5faff;
+    }
+
+    .queue-index { color: rgba(244, 215, 122, 0.74); }
+
     input[type="file"] {
       width: 100%;
       min-height: 42px;
@@ -254,7 +347,9 @@
       .track { grid-template-columns: 40px minmax(0, 1fr); }
       .track button { grid-column: 1 / -1; }
       .search-row { grid-template-columns: 1fr; }
-      .search-row button { width: 100%; }
+      .search-row > .loop-control,
+      .search-row > .loop-control > button { width: 100%; }
+      .loop-menu { left: 0; right: 0; width: auto; }
     }
   </style>
 </head>
@@ -283,9 +378,23 @@
       <div class="track-picker" id="trackPicker">
         <div class="search-row">
           <input id="trackSearch" type="search" placeholder="Search songs" autocomplete="off" aria-label="Search songs" aria-controls="trackMenu" aria-expanded="false">
-          <button id="loop" type="button" aria-pressed="false">Loop: Off</button>
+          <div class="loop-control" id="loopControl">
+            <button id="loop" type="button" aria-haspopup="menu" aria-expanded="false">Loop: Off</button>
+            <div class="loop-menu" id="loopMenu" role="menu">
+              <button type="button" role="menuitem" data-loop="off">Off</button>
+              <button type="button" role="menuitem" data-loop="track">Loop track</button>
+              <button type="button" role="menuitem" data-loop="playlist">Loop playlist</button>
+            </div>
+          </div>
         </div>
         <ul class="track-menu" id="trackMenu" role="listbox"></ul>
+      </div>
+      <div class="queue" aria-label="Song queue">
+        <div class="queue-heading">
+          <span>Up next</span>
+          <strong id="queueCount">0 songs</strong>
+        </div>
+        <ol class="queue-list" id="queueList"></ol>
       </div>
     </div>
 
@@ -307,6 +416,8 @@
     const audio = document.getElementById("audio");
     const toggleButton = document.getElementById("toggle");
     const loopButton = document.getElementById("loop");
+    const loopControl = document.getElementById("loopControl");
+    const loopMenu = document.getElementById("loopMenu");
     const volumeControl = document.getElementById("volume");
     const volumeValue = document.getElementById("volumeValue");
     const status = document.getElementById("status");
@@ -318,15 +429,13 @@
     const trackPicker = document.getElementById("trackPicker");
     const trackSearch = document.getElementById("trackSearch");
     const trackMenu = document.getElementById("trackMenu");
+    const queueCount = document.getElementById("queueCount");
+    const queueList = document.getElementById("queueList");
 
     const tracks = [
       "2008.mp3",
-      "It’s me It’s Verity Indian Version Vindaloo Singh.mp3",
       "Meme.mp3",
       "Nope your too late i already died.mp3",
-      "Nuts Bigger Than Yours.mp3",
-      "We Only Guzzle Diesel (EARRAPE).mp3",
-      "We Only Guzzle Diesel.mp3",
       "a-z niardica cover.mp3",
       "be ur man.mp3",
       "bipolar.mp3",
@@ -341,7 +450,6 @@
       "im so blue for you.mp3",
       "isnt it obvious.mp3",
       "kiss her stpd face.mp3",
-      "lil_globglogabgalab.mp3",
       "lost at the disco (feat. overtonight).mp3",
       "mirrors demo.mp3",
       "not enough (feat. she left me today) (sped up).mp3",
@@ -411,7 +519,31 @@
     }
 
     let importedUrl = null;
-    let loopEnabled = false;
+    let loopMode = "off";
+    let currentFilename = null;
+
+    function renderQueue() {
+      queueList.replaceChildren();
+      const currentIndex = tracks.indexOf(currentFilename);
+      const upcoming = currentIndex === -1
+        ? trackChoices
+        : trackChoices.slice(currentIndex);
+
+      queueCount.textContent = `${upcoming.length} ${upcoming.length === 1 ? "song" : "songs"}`;
+      upcoming.forEach(({ filename, title }, offset) => {
+        const item = document.createElement("li");
+        if (filename === currentFilename) item.classList.add("current");
+
+        const index = document.createElement("span");
+        index.className = "queue-index";
+        index.textContent = String(currentIndex === -1 ? offset + 1 : currentIndex + offset + 1).padStart(2, "0");
+
+        const name = document.createElement("span");
+        name.textContent = title;
+        item.append(index, name);
+        queueList.append(item);
+      });
+    }
 
     function formatTime(time) {
       if (!Number.isFinite(time) || time < 0) return "0:00";
@@ -472,19 +604,44 @@
 
     toggleButton.addEventListener("click", togglePlayback);
 
+    function setLoopMode(mode) {
+      loopMode = mode;
+      audio.loop = mode === "track";
+      loopButton.textContent = mode === "off"
+        ? "Loop: Off"
+        : mode === "track"
+          ? "Loop: Track"
+          : "Loop: Playlist";
+      loopButton.setAttribute("aria-expanded", "false");
+      loopControl.classList.remove("open");
+      loopMenu.querySelectorAll("[data-loop]").forEach((option) => {
+        option.classList.toggle("active", option.dataset.loop === mode);
+      });
+    }
+
     loopButton.addEventListener("click", () => {
-      loopEnabled = !loopEnabled;
-      audio.loop = loopEnabled;
-      loopButton.textContent = `Loop: ${loopEnabled ? "On" : "Off"}`;
-      loopButton.setAttribute("aria-pressed", String(loopEnabled));
-      if (loopEnabled && audio.ended) audio.play();
+      const isOpen = loopControl.classList.toggle("open");
+      loopButton.setAttribute("aria-expanded", String(isOpen));
     });
 
-    function selectTrack(filename, title) {
+    loopMenu.addEventListener("click", (event) => {
+      const option = event.target.closest("[data-loop]");
+      if (option) setLoopMode(option.dataset.loop);
+    });
+
+    document.addEventListener("pointerdown", (event) => {
+      if (!loopControl.contains(event.target)) {
+        loopControl.classList.remove("open");
+        loopButton.setAttribute("aria-expanded", "false");
+      }
+    });
+
+    function playTrack(filename, title, autoplay = false) {
       audio.pause();
       clearImportedSource();
+      currentFilename = filename;
       audio.src = `assets/${filename}`;
-      audio.loop = loopEnabled;
+      audio.loop = loopMode === "track";
       audio.volume = Number(volumeControl.value) / 100;
       trackName.textContent = title;
       trackSearch.value = title;
@@ -492,7 +649,22 @@
       fileControl.value = "";
       setStoppedState();
       closeTrackMenu();
+      renderQueue();
       audio.load();
+      if (autoplay) audio.play().catch(() => {
+        status.textContent = "Unable to play this file in your browser";
+        setStoppedState();
+      });
+    }
+
+    function selectTrack(filename, title) {
+      playTrack(filename, title);
+    }
+
+    function playNextTrack() {
+      const currentIndex = tracks.indexOf(currentFilename);
+      const nextChoice = trackChoices[currentIndex + 1];
+      if (nextChoice) playTrack(nextChoice.filename, nextChoice.title, true);
     }
 
     trackSearch.addEventListener("focus", openTrackMenu);
@@ -511,6 +683,8 @@
     });
 
     renderTrackMenu();
+    renderQueue();
+    setLoopMode("off");
 
     fileControl.addEventListener("change", () => {
       const file = fileControl.files[0];
@@ -523,9 +697,10 @@
 
       audio.pause();
       clearImportedSource();
+      currentFilename = null;
       importedUrl = URL.createObjectURL(file);
       audio.src = importedUrl;
-      audio.loop = loopEnabled;
+      audio.loop = loopMode === "track";
       audio.volume = Number(volumeControl.value) / 100;
       trackName.textContent = file.name;
       status.textContent = "Paused";
@@ -533,6 +708,7 @@
       renderTrackMenu();
       closeTrackMenu();
       setStoppedState();
+      renderQueue();
       audio.load();
     });
 
@@ -562,6 +738,18 @@
       setStoppedState();
     });
     audio.addEventListener("ended", () => {
+      if (loopMode !== "track" && currentFilename) {
+        const currentIndex = tracks.indexOf(currentFilename);
+        const nextChoice = trackChoices[currentIndex + 1];
+        if (nextChoice) {
+          playTrack(nextChoice.filename, nextChoice.title, true);
+          return;
+        }
+        if (loopMode === "playlist" && trackChoices.length) {
+          playTrack(trackChoices[0].filename, trackChoices[0].title, true);
+          return;
+        }
+      }
       setStoppedState();
       status.textContent = "Finished";
     });
