@@ -658,19 +658,10 @@
       "twenty four.mp3",
       "unhappy.mp3",
       "would u notice.mp3",
-      "you are my friend.mp3",
-      "youtube-audio (1).mp3",
-      "youtube-audio (2).mp3",
-      "youtube-audio (3).mp3",
-      "youtube-audio.mp3"
+      "you are my friend.mp3"
     ];
 
-    const trackTitles = {
-      "youtube-audio.mp3": "Gozalo Slowed",
-      "youtube-audio (1).mp3": "I’ll Kick Your Butt in Smash Bros",
-      "youtube-audio (2).mp3": "Sanya Tekk",
-      "youtube-audio (3).mp3": "Handmade"
-    };
+    const trackTitles = {};
 
     const trackChoices = tracks.map((filename) => ({
       filename,
@@ -872,13 +863,9 @@
 
     function renderQueue() {
       queueList.replaceChildren();
-      const currentIndex = trackChoices.findIndex((track) => track.filename === currentFilename);
-      const upcoming = currentIndex === -1
-        ? trackChoices
-        : trackChoices.slice(currentIndex);
 
-      queueCount.textContent = `${upcoming.length} ${upcoming.length === 1 ? "song" : "songs"}`;
-      upcoming.forEach(({ filename, title }, offset) => {
+      queueCount.textContent = `${trackChoices.length} ${trackChoices.length === 1 ? "song" : "songs"}`;
+      trackChoices.forEach(({ filename, title }, offset) => {
         const item = document.createElement("li");
         if (filename === currentFilename) item.classList.add("current");
 
@@ -888,7 +875,7 @@
 
         const index = document.createElement("span");
         index.className = "queue-index";
-        index.textContent = String(currentIndex === -1 ? offset + 1 : currentIndex + offset + 1).padStart(2, "0");
+        index.textContent = String(offset + 1).padStart(2, "0");
 
         const name = document.createElement("span");
         name.textContent = title;
