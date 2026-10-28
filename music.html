@@ -618,6 +618,7 @@
     const trackSearch = document.getElementById("trackSearch");
     const trackMenu = document.getElementById("trackMenu");
     const trackMenuList = document.getElementById("trackMenuList");
+    document.body.append(trackMenu);
     const trackWindowBar = document.getElementById("trackWindowBar");
     const minimizeLibrary = document.getElementById("minimizeLibrary");
     const minimizedLibrary = document.getElementById("minimizedLibrary");
@@ -799,6 +800,7 @@
       const top = Math.max(12, Math.min(below, innerHeight - menuHeight - 12));
       trackMenu.style.left = `${left}px`;
       trackMenu.style.top = `${top}px`;
+      trackMenu.style.width = `${Math.min(390, innerWidth - 24)}px`;
       windowPositioned = true;
     }
 
