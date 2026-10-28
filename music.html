@@ -642,6 +642,73 @@
       title: trackTitles[filename] || filename.replace(/\.mp3$/i, "")
     }));
 
+    const importedPlaylistKey = "music-player-imported-playlist-v1";
+    let importedDatabase = null;
+
+    function openImportedDatabase() {
+      if (importedDatabase) return importedDatabase;
+      importedDatabase = new Promise((resolve, reject) => {
+        const request = indexedDB.open("music-player-library", 1);
+        request.addEventListener("upgradeneeded", () => {
+          request.result.createObjectStore("songs", { keyPath: "id" });
+        });
+        request.addEventListener("success", () => resolve(request.result));
+        request.addEventListener("error", () => reject(request.error));
+      });
+      return importedDatabase;
+    }
+
+    async function readImportedSong(id) {
+      const database = await openImportedDatabase();
+      return new Promise((resolve, reject) => {
+        const request = database.transaction("songs", "readonly").objectStore("songs").get(id);
+        request.addEventListener("success", () => resolve(request.result?.blob || null));
+        request.addEventListener("error", () => reject(request.error));
+      });
+    }
+
+    async function storeImportedSong(id, blob) {
+      const database = await openImportedDatabase();
+      return new Promise((resolve, reject) => {
+        const transaction = database.transaction("songs", "readwrite");
+        transaction.objectStore("songs").put({ id, blob });
+        transaction.addEventListener("complete", resolve);
+        transaction.addEventListener("error", () => reject(transaction.error));
+      });
+    }
+
+    function readImportedPlaylist() {
+      try {
+        const saved = JSON.parse(localStorage.getItem(importedPlaylistKey) || "[]");
+        return Array.isArray(saved)
+          ? saved.filter((item) => item && typeof item.id === "string" && typeof item.title === "string")
+          : [];
+      } catch {
+        return [];
+      }
+    }
+
+    function saveImportedPlaylist() {
+      const playlist = trackChoices.filter((track) => track.imported).map(({ id, title }) => ({ id, title }));
+      localStorage.setItem(importedPlaylistKey, JSON.stringify(playlist));
+    }
+
+    async function loadImportedPlaylist() {
+      const saved = readImportedPlaylist();
+      let missingCount = 0;
+      for (const item of saved) {
+        const blob = await readImportedSong(item.id).catch(() => null);
+        if (!blob) {
+          missingCount += 1;
+          continue;
+        }
+        trackChoices.push({ id: item.id, filename: item.id, title: item.title, imported: true, type: blob.type });
+      }
+      renderTrackMenu();
+      renderQueue();
+      if (missingCount) status.textContent = `Restored playlist; ${missingCount} missing file${missingCount === 1 ? "" : "s"}`;
+    }
+
     let windowPositioned = false;
     let dragOffset = null;
     let playerDragOffset = null;
@@ -767,7 +834,7 @@
 
     function renderQueue() {
       queueList.replaceChildren();
-      const currentIndex = tracks.indexOf(currentFilename);
+      const currentIndex = trackChoices.findIndex((track) => track.filename === currentFilename);
       const upcoming = currentIndex === -1
         ? trackChoices
         : trackChoices.slice(currentIndex);
@@ -879,11 +946,25 @@
       }
     });
 
-    function playTrack(filename, title, autoplay = false) {
+    async function playTrack(filename, title, autoplay = false, imported = false) {
       audio.pause();
       clearImportedSource();
       currentFilename = filename;
-      audio.src = `assets/${filename}`;
+
+      let source;
+      if (imported) {
+        const blob = await readImportedSong(filename);
+        if (!blob) {
+          status.textContent = "This saved song is no longer available";
+          return;
+        }
+        importedUrl = URL.createObjectURL(blob);
+        source = importedUrl;
+      } else {
+        source = `assets/${filename}`;
+      }
+
+      audio.src = source;
       audio.loop = loopMode === "track";
       audio.volume = Number(volumeControl.value) / 100;
       trackName.textContent = title;
@@ -901,13 +982,14 @@
     }
 
     function selectTrack(filename, title) {
-      playTrack(filename, title);
+      const choice = trackChoices.find((track) => track.filename === filename);
+      playTrack(filename, title, false, Boolean(choice?.imported));
     }
 
     function playNextTrack() {
-      const currentIndex = tracks.indexOf(currentFilename);
+      const currentIndex = trackChoices.findIndex((track) => track.filename === currentFilename);
       const nextChoice = trackChoices[currentIndex + 1];
-      if (nextChoice) playTrack(nextChoice.filename, nextChoice.title, true);
+      if (nextChoice) playTrack(nextChoice.filename, nextChoice.title, true, Boolean(nextChoice.imported));
     }
 
     trackSearch.addEventListener("focus", openTrackMenu);
@@ -949,8 +1031,11 @@
     renderTrackMenu();
     renderQueue();
     setLoopMode("off");
+    loadImportedPlaylist().catch(() => {
+      status.textContent = "Imported songs could not be restored";
+    });
 
-    fileControl.addEventListener("change", () => {
+    fileControl.addEventListener("change", async () => {
       const file = fileControl.files[0];
       if (!file) return;
       if (!/\.(mp3|mp4)$/i.test(file.name)) {
@@ -959,21 +1044,24 @@
         return;
       }
 
-      audio.pause();
-      clearImportedSource();
-      currentFilename = null;
-      importedUrl = URL.createObjectURL(file);
-      audio.src = importedUrl;
-      audio.loop = loopMode === "track";
-      audio.volume = Number(volumeControl.value) / 100;
-      trackName.textContent = file.name;
-      status.textContent = "Paused";
-      trackSearch.value = "";
-      renderTrackMenu();
-      closeTrackMenu();
-      setStoppedState();
-      renderQueue();
-      audio.load();
+      const id = `imported-${crypto.randomUUID?.() || `${Date.now()}-${Math.random().toString(16).slice(2)}`}`;
+      const title = file.name.replace(/\.(mp3|mp4)$/i, "") || file.name;
+
+      try {
+        await storeImportedSong(id, file);
+        trackChoices.push({ id, filename: id, title, imported: true, type: file.type });
+        saveImportedPlaylist();
+        await playTrack(id, title, false, true);
+        renderTrackMenu();
+        renderQueue();
+        status.textContent = "Saved to local playlist";
+        trackSearch.value = title;
+      } catch (error) {
+        console.error(error);
+        status.textContent = "Unable to save this song locally";
+      } finally {
+        fileControl.value = "";
+      }
     });
 
     progressControl.addEventListener("input", () => {
@@ -1003,10 +1091,10 @@
     });
     audio.addEventListener("ended", () => {
       if (loopMode !== "track" && currentFilename) {
-        const currentIndex = tracks.indexOf(currentFilename);
+        const currentIndex = trackChoices.findIndex((track) => track.filename === currentFilename);
         const nextChoice = trackChoices[currentIndex + 1];
         if (nextChoice) {
-          playTrack(nextChoice.filename, nextChoice.title, true);
+          playTrack(nextChoice.filename, nextChoice.title, true, Boolean(nextChoice.imported));
           return;
         }
         if (loopMode === "playlist" && trackChoices.length) {
