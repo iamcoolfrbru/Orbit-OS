@@ -288,7 +288,8 @@
       transition: opacity 160ms ease, transform 160ms ease, visibility 160ms;
     }
 
-    .track-picker.open .track-menu {
+    .track-picker.open .track-menu,
+    .track-menu.open {
       opacity: 1;
       visibility: visible;
       transform: translateY(0) scale(1);
@@ -806,6 +807,7 @@
 
     function openTrackMenu() {
       trackPicker.classList.add("open");
+      trackMenu.classList.add("open");
       minimizedLibrary.classList.remove("visible");
       trackMenu.classList.remove("minimizing");
       positionTrackMenu();
@@ -814,6 +816,7 @@
 
     function closeTrackMenu() {
       trackPicker.classList.remove("open");
+      trackMenu.classList.remove("open");
       trackSearch.setAttribute("aria-expanded", "false");
     }
 
