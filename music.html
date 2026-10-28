@@ -437,6 +437,26 @@
       color: #d5faff;
     }
 
+    .queue-list button {
+      display: grid;
+      grid-template-columns: 24px minmax(0, 1fr);
+      gap: 7px;
+      align-items: center;
+      width: 100%;
+      min-height: 30px;
+      padding: 4px 6px;
+      border: 0;
+      border-radius: 3px;
+      background: transparent;
+      color: inherit;
+      text-align: left;
+      cursor: pointer;
+      font: inherit;
+    }
+
+    .queue-list button:hover,
+    .queue-list button:focus-visible { background: rgba(139, 233, 253, 0.12); }
+
     .queue-index { color: rgba(244, 215, 122, 0.74); }
 
     input[type="file"] {
@@ -844,13 +864,19 @@
         const item = document.createElement("li");
         if (filename === currentFilename) item.classList.add("current");
 
+        const choice = document.createElement("button");
+        choice.type = "button";
+        choice.setAttribute("aria-label", `Play ${title}`);
+
         const index = document.createElement("span");
         index.className = "queue-index";
         index.textContent = String(currentIndex === -1 ? offset + 1 : currentIndex + offset + 1).padStart(2, "0");
 
         const name = document.createElement("span");
         name.textContent = title;
-        item.append(index, name);
+        choice.append(index, name);
+        choice.addEventListener("click", () => selectTrack(filename, title));
+        item.append(choice);
         queueList.append(item);
       });
     }
@@ -993,6 +1019,7 @@
     }
 
     trackSearch.addEventListener("focus", openTrackMenu);
+    trackSearch.addEventListener("click", openTrackMenu);
     trackSearch.addEventListener("input", () => {
       renderTrackMenu(trackSearch.value);
       openTrackMenu();
