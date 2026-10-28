@@ -21,8 +21,8 @@
       overflow-x: hidden;
       padding: 20px;
       background:
-        radial-gradient(circle at 20% 20%, rgba(139, 233, 253, 0.09), transparent 28%),
-        radial-gradient(circle at 82% 74%, rgba(244, 215, 122, 0.07), transparent 24%),
+        linear-gradient(rgba(5, 7, 10, 0.76), rgba(5, 7, 10, 0.76)),
+        url("./assets/remove_object_01 (1).png") center / cover fixed,
         #05070a;
       color: #fff;
       font-family: "Segoe UI", Arial, sans-serif;
@@ -207,34 +207,73 @@
     #trackSearch::placeholder { color: rgba(255, 255, 255, 0.48); }
 
     .track-menu {
-      position: absolute;
-      top: calc(100% + 6px);
-      left: 0;
-      right: 0;
-      z-index: 5;
-      max-height: min(280px, 45vh);
-      overflow-y: auto;
-      margin: 0;
-      padding: 5px;
-      border: 1px solid rgba(139, 233, 253, 0.36);
-      border-radius: 4px;
+      position: fixed;
+      z-index: 20;
+      width: min(390px, calc(100vw - 24px));
+      overflow: hidden;
+      border: 1px solid rgba(139, 233, 253, 0.46);
+      border-radius: 6px;
       background: rgba(8, 13, 20, 0.98);
-      box-shadow: 0 18px 36px rgba(0, 0, 0, 0.48);
-      list-style: none;
+      box-shadow: 0 22px 48px rgba(0, 0, 0, 0.58);
       opacity: 0;
       visibility: hidden;
-      transform: translateY(-8px) scaleY(0.96);
-      transform-origin: top;
+      transform: translateY(-8px) scale(0.96);
+      transform-origin: top left;
       transition: opacity 160ms ease, transform 160ms ease, visibility 160ms;
     }
 
     .track-picker.open .track-menu {
       opacity: 1;
       visibility: visible;
-      transform: translateY(0) scaleY(1);
+      transform: translateY(0) scale(1);
     }
 
-    .track-menu button {
+    .window-bar {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      align-items: center;
+      min-height: 38px;
+      padding-left: 10px;
+      border-bottom: 1px solid rgba(139, 233, 253, 0.22);
+      background: linear-gradient(90deg, rgba(139, 233, 253, 0.13), rgba(244, 215, 122, 0.04));
+      cursor: move;
+      user-select: none;
+      touch-action: none;
+    }
+
+    .window-title {
+      overflow: hidden;
+      color: #d5faff;
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .window-controls { display: flex; }
+
+    .window-controls button {
+      width: 38px;
+      min-height: 38px;
+      border: 0;
+      border-left: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 0;
+      background: transparent;
+      color: rgba(255, 255, 255, 0.82);
+      font-size: 1.05rem;
+    }
+
+    .window-controls button:hover { background: rgba(139, 233, 253, 0.16); }
+
+    .track-menu-list {
+      max-height: min(242px, 45vh);
+      overflow-y: auto;
+      margin: 0;
+      padding: 5px;
+      list-style: none;
+    }
+
+    .track-menu-list button {
       width: 100%;
       min-height: 38px;
       border: 0;
@@ -248,13 +287,45 @@
       white-space: nowrap;
     }
 
-    .track-menu button:hover,
-    .track-menu button:focus-visible { background: rgba(139, 233, 253, 0.12); }
+    .track-menu-list button:hover,
+    .track-menu-list button:focus-visible { background: rgba(139, 233, 253, 0.12); }
 
-    .track-menu .empty-result {
+    .track-menu-list .empty-result {
       padding: 12px 10px;
       color: rgba(255, 255, 255, 0.58);
       font-size: 0.78rem;
+    }
+
+    .track-menu.minimizing {
+      animation: minimize-window 360ms cubic-bezier(0.4, 0, 1, 1) forwards;
+    }
+
+    @keyframes minimize-window {
+      to {
+        opacity: 0;
+        transform: translate(var(--min-x), var(--min-y)) scale(0.08);
+      }
+    }
+
+    .minimized-library {
+      position: fixed;
+      right: 18px;
+      bottom: 18px;
+      z-index: 19;
+      min-height: 38px;
+      max-width: calc(100vw - 36px);
+      border: 1px solid rgba(139, 233, 253, 0.46);
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.48);
+      opacity: 0;
+      visibility: hidden;
+      transform: translateY(12px);
+      transition: opacity 180ms ease, transform 180ms ease, visibility 180ms;
+    }
+
+    .minimized-library.visible {
+      opacity: 1;
+      visibility: visible;
+      transform: translateY(0);
     }
 
     .queue {
@@ -387,7 +458,15 @@
             </div>
           </div>
         </div>
-        <ul class="track-menu" id="trackMenu" role="listbox"></ul>
+        <div class="track-menu" id="trackMenu" role="dialog" aria-label="Song library">
+          <div class="window-bar" id="trackWindowBar">
+            <span class="window-title">Song Library</span>
+            <div class="window-controls">
+              <button id="minimizeLibrary" type="button" aria-label="Minimize song library" title="Minimize">&#8213;</button>
+            </div>
+          </div>
+          <ul class="track-menu-list" id="trackMenuList" role="listbox"></ul>
+        </div>
       </div>
       <div class="queue" aria-label="Song queue">
         <div class="queue-heading">
@@ -412,6 +491,10 @@
     <audio id="audio" preload="metadata" hidden></audio>
   </main>
 
+  <button class="minimized-library" id="minimizedLibrary" type="button" aria-label="Restore song library">
+    Song Library
+  </button>
+
   <script>
     const audio = document.getElementById("audio");
     const toggleButton = document.getElementById("toggle");
@@ -429,6 +512,10 @@
     const trackPicker = document.getElementById("trackPicker");
     const trackSearch = document.getElementById("trackSearch");
     const trackMenu = document.getElementById("trackMenu");
+    const trackMenuList = document.getElementById("trackMenuList");
+    const trackWindowBar = document.getElementById("trackWindowBar");
+    const minimizeLibrary = document.getElementById("minimizeLibrary");
+    const minimizedLibrary = document.getElementById("minimizedLibrary");
     const queueCount = document.getElementById("queueCount");
     const queueList = document.getElementById("queueList");
 
@@ -482,8 +569,27 @@
       title: trackTitles[filename] || filename.replace(/\.mp3$/i, "")
     }));
 
+    let windowPositioned = false;
+    let dragOffset = null;
+
+    function positionTrackMenu() {
+      if (windowPositioned) return;
+      const anchor = trackSearch.getBoundingClientRect();
+      const menuWidth = trackMenu.offsetWidth;
+      const menuHeight = trackMenu.offsetHeight;
+      const left = Math.max(12, Math.min(anchor.left, innerWidth - menuWidth - 12));
+      const below = anchor.bottom + 8;
+      const top = Math.max(12, Math.min(below, innerHeight - menuHeight - 12));
+      trackMenu.style.left = `${left}px`;
+      trackMenu.style.top = `${top}px`;
+      windowPositioned = true;
+    }
+
     function openTrackMenu() {
       trackPicker.classList.add("open");
+      minimizedLibrary.classList.remove("visible");
+      trackMenu.classList.remove("minimizing");
+      positionTrackMenu();
       trackSearch.setAttribute("aria-expanded", "true");
     }
 
@@ -492,17 +598,36 @@
       trackSearch.setAttribute("aria-expanded", "false");
     }
 
+    function minimizeTrackMenu() {
+      if (!trackPicker.classList.contains("open")) return;
+      const menuRect = trackMenu.getBoundingRect?.() || trackMenu.getBoundingClientRect();
+      const dockRect = minimizedLibrary.getBoundingClientRect();
+      const menuCenterX = menuRect.left + menuRect.width / 2;
+      const menuCenterY = menuRect.top + menuRect.height / 2;
+      const dockCenterX = dockRect.left + dockRect.width / 2;
+      const dockCenterY = dockRect.top + dockRect.height / 2;
+      trackMenu.style.setProperty("--min-x", `${dockCenterX - menuCenterX}px`);
+      trackMenu.style.setProperty("--min-y", `${dockCenterY - menuCenterY}px`);
+      trackMenu.classList.add("minimizing");
+
+      window.setTimeout(() => {
+        closeTrackMenu();
+        trackMenu.classList.remove("minimizing");
+        minimizedLibrary.classList.add("visible");
+      }, 360);
+    }
+
     function renderTrackMenu(query = "") {
       const matches = trackChoices.filter(({ title }) =>
         title.toLowerCase().includes(query.trim().toLowerCase())
       );
-      trackMenu.replaceChildren();
+      trackMenuList.replaceChildren();
 
       if (!matches.length) {
         const empty = document.createElement("li");
         empty.className = "empty-result";
         empty.textContent = "No matching songs";
-        trackMenu.append(empty);
+        trackMenuList.append(empty);
         return;
       }
 
@@ -514,7 +639,7 @@
         choice.textContent = title;
         choice.addEventListener("click", () => selectTrack(filename, title));
         item.append(choice);
-        trackMenu.append(item);
+        trackMenuList.append(item);
       });
     }
 
@@ -673,8 +798,29 @@
       openTrackMenu();
     });
     document.addEventListener("pointerdown", (event) => {
-      if (!trackPicker.contains(event.target)) closeTrackMenu();
+      if (!trackPicker.contains(event.target) && !trackMenu.contains(event.target)) closeTrackMenu();
     });
+    minimizeLibrary.addEventListener("click", minimizeTrackMenu);
+    minimizedLibrary.addEventListener("click", openTrackMenu);
+
+    trackWindowBar.addEventListener("pointerdown", (event) => {
+      if (event.target.closest("button")) return;
+      const rect = trackMenu.getBoundingClientRect();
+      dragOffset = { x: event.clientX - rect.left, y: event.clientY - rect.top };
+      trackWindowBar.setPointerCapture(event.pointerId);
+    });
+
+    trackWindowBar.addEventListener("pointermove", (event) => {
+      if (!dragOffset) return;
+      const left = Math.max(0, Math.min(innerWidth - trackMenu.offsetWidth, event.clientX - dragOffset.x));
+      const top = Math.max(0, Math.min(innerHeight - trackMenu.offsetHeight, event.clientY - dragOffset.y));
+      trackMenu.style.left = `${left}px`;
+      trackMenu.style.top = `${top}px`;
+    });
+
+    trackWindowBar.addEventListener("pointerup", () => { dragOffset = null; });
+    trackWindowBar.addEventListener("pointercancel", () => { dragOffset = null; });
+
     trackSearch.addEventListener("keydown", (event) => {
       if (event.key === "Escape") {
         closeTrackMenu();
