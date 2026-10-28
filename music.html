@@ -363,9 +363,16 @@
       "youtube-audio.mp3"
     ];
 
+    const trackTitles = {
+      "youtube-audio.mp3": "Gozalo Slowed",
+      "youtube-audio (1).mp3": "I’ll Kick Your Butt in Smash Bros",
+      "youtube-audio (2).mp3": "Sanya Tekk",
+      "youtube-audio (3).mp3": "Handmade"
+    };
+
     const trackChoices = tracks.map((filename) => ({
       filename,
-      title: filename.replace(/\.mp3$/i, "")
+      title: trackTitles[filename] || filename.replace(/\.mp3$/i, "")
     }));
 
     function openTrackMenu() {
