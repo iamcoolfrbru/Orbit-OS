@@ -1193,6 +1193,9 @@
       window.clearTimeout(classroomMinimizeTimer);
       if (!classroomWindow.classList.contains("is-open") && !classroomWindow.classList.contains("is-minimized")) return;
       window.clearTimeout(classroomCloseTimer);
+      if (document.fullscreenElement === classroomWindow || document.fullscreenElement === classroomFrame) {
+        document.exitFullscreen();
+      }
       classroomWindow.classList.remove("is-minimized", "minimizing", "window-opening");
       classroomWindow.classList.add("is-open", "window-closing");
       classroomCloseTimer = window.setTimeout(() => {
