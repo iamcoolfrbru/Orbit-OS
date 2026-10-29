@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Alex's School OS</title>
   <link rel="icon" type="image/png" href="./assets/Neon Flame Diamond Emblem.png">
-  <link rel="preconnect" href="https://just-fall-online.github.io">
+  <link rel="preconnect" href="https://brainworxedu.github.io">
   <style>
     * { box-sizing: border-box; }
 
@@ -755,9 +755,9 @@
       <span class="shortcut-icon" aria-hidden="true">♪</span>
       <span>All Songs (in development)</span>
     </button>
-    <button class="desktop-shortcut" id="openClassroomShortcut" type="button" aria-label="Open Just Fall Online">
+    <button class="desktop-shortcut" id="openClassroomShortcut" type="button" aria-label="Open Classroom (g@m3s)">
       <span class="shortcut-icon" aria-hidden="true">▣</span>
-      <span>Just Fall Online</span>
+      <span>Classroom (g@m3s)</span>
     </button>
   </nav>
 
@@ -776,15 +776,15 @@
 
   <section class="external-window classroom-window" id="classroomWindow" role="dialog" aria-labelledby="classroomTitle">
     <div class="window-bar all-songs-window-bar" id="classroomWindowBar">
-      <span class="window-title" id="classroomTitle">Just Fall Online</span>
+      <span class="window-title" id="classroomTitle">Classroom (g@m3s)</span>
       <div class="window-controls">
-        <a class="external-window-link" href="https://just-fall-online.github.io/" target="_blank" rel="noopener noreferrer">Open site</a>
-        <button id="fullscreenClassroom" type="button" aria-label="Fullscreen Just Fall Online" title="Fullscreen">&#x26F6;</button>
-        <button id="minimizeClassroom" type="button" aria-label="Minimize Just Fall Online" title="Minimize">&#8213;</button>
-        <button id="closeClassroom" type="button" aria-label="Close Just Fall Online" title="Close">&#215;</button>
+        <a class="external-window-link" href="https://brainworxedu.github.io/" target="_blank" rel="noopener noreferrer">Open site</a>
+        <button id="fullscreenClassroom" type="button" aria-label="Fullscreen Classroom (g@m3s)" title="Fullscreen">&#x26F6;</button>
+        <button id="minimizeClassroom" type="button" aria-label="Minimize Classroom (g@m3s)" title="Minimize">&#8213;</button>
+        <button id="closeClassroom" type="button" aria-label="Close Classroom (g@m3s)" title="Close">&#215;</button>
       </div>
     </div>
-    <iframe class="all-songs-frame" id="classroomFrame" title="Just Fall Online" src="https://just-fall-online.github.io/" loading="eager" allow="fullscreen" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe>
+    <iframe class="all-songs-frame" id="classroomFrame" title="Classroom (g@m3s)" src="https://brainworxedu.github.io/" loading="eager" allow="fullscreen" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe>
   </section>
 
   <nav class="taskbar" aria-label="Taskbar">
@@ -800,9 +800,9 @@
       <span class="taskbar-icon" aria-hidden="true">♪</span>
       <span>Musixmatch</span>
     </button>
-    <button class="taskbar-app" id="classroomTaskbar" type="button" aria-label="Open or restore Just Fall Online" aria-pressed="false">
+    <button class="taskbar-app" id="classroomTaskbar" type="button" aria-label="Open or restore Classroom (g@m3s)" aria-pressed="false">
       <span class="taskbar-icon" aria-hidden="true">▣</span>
-      <span>Just Fall Online</span>
+      <span>Classroom (g@m3s)</span>
     </button>
   </nav>
 
@@ -1085,14 +1085,14 @@
 
     function syncExternalFullscreenButtons() {
       updateFullscreenButton(fullscreenAllSongs, allSongsWindow, allSongsFrame, "Musixmatch");
-      updateFullscreenButton(fullscreenClassroom, classroomWindow, classroomFrame, "Just Fall Online");
+      updateFullscreenButton(fullscreenClassroom, classroomWindow, classroomFrame, "Classroom (g@m3s)");
     }
 
     fullscreenAllSongs.addEventListener("click", () => {
       toggleExternalFullscreen(allSongsWindow, allSongsFrame, fullscreenAllSongs, "Musixmatch");
     });
     fullscreenClassroom.addEventListener("click", () => {
-      toggleExternalFullscreen(classroomWindow, classroomFrame, fullscreenClassroom, "Just Fall Online");
+      toggleExternalFullscreen(classroomWindow, classroomFrame, fullscreenClassroom, "Classroom (g@m3s)");
     });
     document.addEventListener("fullscreenchange", syncExternalFullscreenButtons);
 
@@ -1171,7 +1171,7 @@
         window.setTimeout(() => classroomWindow.classList.remove("window-opening"), 240);
       }
       if (!classroomFrame.hasAttribute("src")) {
-        classroomFrame.src = "https://just-fall-online.github.io/";
+        classroomFrame.src = "https://brainworxedu.github.io/";
       }
       classroomTaskbar.classList.add("running");
       classroomTaskbar.setAttribute("aria-pressed", "true");
