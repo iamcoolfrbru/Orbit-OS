@@ -20,7 +20,7 @@
       display: grid;
       place-items: center;
       overflow-x: hidden;
-      padding: 20px;
+      padding: 20px 20px 78px;
       background:
         linear-gradient(rgba(5, 7, 10, 0.76), rgba(5, 7, 10, 0.76)),
         url("./assets/remove_object_01 (1).png") center / cover fixed,
@@ -50,12 +50,12 @@
 
     .music-player {
       position: fixed;
-      top: 50%;
+      top: calc(50% - 29px);
       left: 50%;
       z-index: 10;
       translate: -50% -50%;
       width: min(440px, 100%);
-      max-height: calc(100vh - 24px);
+      max-height: calc(100vh - 82px);
       overflow-y: auto;
       padding: 0 18px 18px;
       border: 1px solid rgba(139, 233, 253, 0.36);
@@ -112,27 +112,170 @@
       display: none;
     }
 
+    .music-player.is-closed,
+    .track-menu.is-closed { display: none; }
+
     .player-window-controls { border-left: 0; }
 
-    .minimized-player {
+    .desktop-shortcuts {
       position: fixed;
+      top: 18px;
       left: 18px;
-      bottom: 18px;
-      z-index: 18;
-      min-height: 38px;
-      max-width: calc(100vw - 36px);
-      border: 1px solid rgba(139, 233, 253, 0.46);
-      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.48);
-      opacity: 0;
-      visibility: hidden;
-      transform: translateY(12px);
-      transition: opacity 180ms ease, transform 180ms ease, visibility 180ms;
+      z-index: 2;
+      display: grid;
+      gap: 12px;
     }
 
-    .minimized-player.visible {
-      opacity: 1;
-      visibility: visible;
-      transform: translateY(0);
+    .desktop-shortcut {
+      display: grid;
+      justify-items: center;
+      gap: 5px;
+      width: 82px;
+      min-height: 76px;
+      padding: 6px 4px;
+      border: 1px solid transparent;
+      border-radius: 5px;
+      background: transparent;
+      color: #fff;
+      font-size: 0.7rem;
+      font-weight: 400;
+      text-align: center;
+      text-shadow: 0 1px 3px #000;
+    }
+
+    .desktop-shortcut:hover,
+    .desktop-shortcut:focus-visible {
+      border-color: rgba(139, 233, 253, 0.42);
+      background: rgba(139, 233, 253, 0.14);
+    }
+
+    .shortcut-icon {
+      display: grid;
+      width: 42px;
+      height: 42px;
+      place-items: center;
+      border: 1px solid rgba(139, 233, 253, 0.5);
+      border-radius: 8px;
+      background: linear-gradient(145deg, rgba(139, 233, 253, 0.24), rgba(8, 13, 20, 0.92));
+      color: var(--gold);
+      font-size: 1.5rem;
+      text-shadow: none;
+    }
+
+    .taskbar {
+      position: fixed;
+      right: 0;
+      bottom: 0;
+      left: 0;
+      z-index: 30;
+      display: flex;
+      min-height: 58px;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 12px max(6px, env(safe-area-inset-bottom));
+      border-top: 1px solid rgba(139, 233, 253, 0.24);
+      background: rgba(5, 9, 15, 0.88);
+      box-shadow: 0 -8px 28px rgba(0, 0, 0, 0.32);
+      backdrop-filter: blur(14px);
+    }
+
+    .taskbar-app {
+      position: relative;
+      display: flex;
+      min-width: 124px;
+      min-height: 42px;
+      align-items: center;
+      justify-content: flex-start;
+      gap: 9px;
+      padding: 0 12px;
+      border: 1px solid transparent;
+      border-radius: 4px;
+      background: transparent;
+      color: rgba(255, 255, 255, 0.86);
+      font-size: 0.78rem;
+      font-weight: 500;
+    }
+
+    .taskbar-app:hover,
+    .taskbar-app:focus-visible { background: rgba(139, 233, 253, 0.12); }
+
+    .taskbar-app.running {
+      border-color: rgba(139, 233, 253, 0.18);
+      background: rgba(139, 233, 253, 0.08);
+    }
+
+    .taskbar-app.running::after {
+      position: absolute;
+      bottom: 3px;
+      left: calc(50% - 9px);
+      width: 18px;
+      height: 2px;
+      border-radius: 2px;
+      background: var(--cyan);
+      content: "";
+    }
+
+    .taskbar-icon {
+      color: var(--gold);
+      font-size: 1.1rem;
+    }
+
+    .all-songs-window {
+      position: fixed;
+      top: calc(50% - 29px);
+      left: 50%;
+      z-index: 12;
+      display: none;
+      grid-template-rows: 40px minmax(0, 1fr);
+      width: min(920px, calc(100vw - 32px));
+      height: min(680px, calc(100vh - 82px));
+      overflow: hidden;
+      translate: -50% -50%;
+      border: 1px solid rgba(139, 233, 253, 0.46);
+      border-radius: 7px;
+      background: rgba(8, 13, 20, 0.98);
+      box-shadow: 0 22px 48px rgba(0, 0, 0, 0.58);
+    }
+
+    .all-songs-window.is-open { display: grid; }
+    .all-songs-window.is-minimized { display: none; }
+    .all-songs-window.minimizing { animation: minimize-all-songs 300ms cubic-bezier(0.4, 0, 1, 1) forwards; }
+
+    @keyframes minimize-all-songs {
+      to {
+        opacity: 0;
+        transform: translate(var(--all-songs-min-x), var(--all-songs-min-y)) scale(0.08);
+      }
+    }
+
+    .all-songs-window-bar {
+      cursor: move;
+      touch-action: none;
+    }
+
+    .all-songs-window-bar .window-controls { align-items: center; }
+
+    .external-window-link {
+      padding: 0 10px;
+      color: var(--cyan);
+      font-size: 0.72rem;
+      text-decoration: none;
+    }
+
+    .external-window-link:hover { text-decoration: underline; }
+
+    .all-songs-frame {
+      width: 100%;
+      height: 100%;
+      border: 0;
+      background: #fff;
+    }
+
+    @media (max-width: 420px) {
+      .taskbar { gap: 2px; padding-right: 6px; padding-left: 6px; }
+      .taskbar-app { min-width: 0; flex: 1; justify-content: center; padding: 0 6px; }
+      .desktop-shortcuts { top: 8px; left: 8px; }
+      .all-songs-window { width: calc(100vw - 16px); height: calc(100vh - 74px); }
     }
 
     .track {
@@ -375,27 +518,6 @@
       }
     }
 
-    .minimized-library {
-      position: fixed;
-      right: 18px;
-      bottom: 18px;
-      z-index: 19;
-      min-height: 38px;
-      max-width: calc(100vw - 36px);
-      border: 1px solid rgba(139, 233, 253, 0.46);
-      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.48);
-      opacity: 0;
-      visibility: hidden;
-      transform: translateY(12px);
-      transition: opacity 180ms ease, transform 180ms ease, visibility 180ms;
-    }
-
-    .minimized-library.visible {
-      opacity: 1;
-      visibility: visible;
-      transform: translateY(0);
-    }
-
     .queue {
       display: grid;
       gap: 8px;
@@ -524,6 +646,7 @@
       <h1>Alex's Music Hub</h1>
       <div class="window-controls player-window-controls">
         <button id="minimizePlayer" type="button" aria-label="Minimize music player" title="Minimize">&#8213;</button>
+        <button id="closePlayer" type="button" aria-label="Close music player" title="Close">&#215;</button>
       </div>
     </div>
     <div class="track">
@@ -562,6 +685,7 @@
             <span class="window-title">Song Library</span>
             <div class="window-controls">
               <button id="minimizeLibrary" type="button" aria-label="Minimize song library" title="Minimize">&#8213;</button>
+              <button id="closeLibrary" type="button" aria-label="Close song library" title="Close">&#215;</button>
             </div>
           </div>
           <ul class="track-menu-list" id="trackMenuList" role="listbox"></ul>
@@ -590,20 +714,64 @@
     <audio id="audio" preload="metadata" hidden></audio>
   </main>
 
-  <button class="minimized-player" id="minimizedPlayer" type="button" aria-label="Restore music player">
-    Music
-  </button>
+  <nav class="desktop-shortcuts" aria-label="Desktop shortcuts">
+    <button class="desktop-shortcut" id="openPlayerShortcut" type="button" aria-label="Open Music Player">
+      <span class="shortcut-icon" aria-hidden="true">♫</span>
+      <span>Alex Music Preset</span>
+    </button>
+    <button class="desktop-shortcut" id="openLibraryShortcut" type="button" aria-label="Open Song Library">
+      <span class="shortcut-icon" aria-hidden="true">▤</span>
+      <span>Song Library</span>
+    </button>
+    <button class="desktop-shortcut" id="openAllSongsShortcut" type="button" aria-label="Open All Songs (in development)">
+      <span class="shortcut-icon" aria-hidden="true">♪</span>
+      <span>All Songs (in development)</span>
+    </button>
+  </nav>
 
-  <button class="minimized-library" id="minimizedLibrary" type="button" aria-label="Restore song library">
-    Song Library
-  </button>
+  <section class="all-songs-window" id="allSongsWindow" role="dialog" aria-labelledby="allSongsTitle">
+    <div class="window-bar all-songs-window-bar" id="allSongsWindowBar">
+      <span class="window-title" id="allSongsTitle">Musixmatch</span>
+      <div class="window-controls">
+        <a class="external-window-link" href="https://www.musixmatch.com/" target="_blank" rel="noopener noreferrer">Open site</a>
+        <button id="minimizeAllSongs" type="button" aria-label="Minimize Musixmatch" title="Minimize">&#8213;</button>
+        <button id="closeAllSongs" type="button" aria-label="Close Musixmatch" title="Close">&#215;</button>
+      </div>
+    </div>
+    <iframe class="all-songs-frame" id="allSongsFrame" title="Musixmatch" referrerpolicy="strict-origin-when-cross-origin"></iframe>
+  </section>
+
+  <nav class="taskbar" aria-label="Taskbar">
+    <button class="taskbar-app minimized-player running" id="minimizedPlayer" type="button" aria-label="Open or restore music player" aria-pressed="true">
+      <span class="taskbar-icon" aria-hidden="true">♫</span>
+      <span>Music Player</span>
+    </button>
+    <button class="taskbar-app minimized-library" id="minimizedLibrary" type="button" aria-label="Open or restore song library" aria-pressed="false">
+      <span class="taskbar-icon" aria-hidden="true">▤</span>
+      <span>Song Library</span>
+    </button>
+    <button class="taskbar-app" id="allSongsTaskbar" type="button" aria-label="Open or restore Musixmatch" aria-pressed="false">
+      <span class="taskbar-icon" aria-hidden="true">♪</span>
+      <span>Musixmatch</span>
+    </button>
+  </nav>
 
   <script>
     const audio = document.getElementById("audio");
     const musicPlayer = document.getElementById("musicPlayer");
     const playerWindowBar = document.getElementById("playerWindowBar");
     const minimizePlayer = document.getElementById("minimizePlayer");
+    const closePlayer = document.getElementById("closePlayer");
     const minimizedPlayer = document.getElementById("minimizedPlayer");
+    const openPlayerShortcut = document.getElementById("openPlayerShortcut");
+    const openLibraryShortcut = document.getElementById("openLibraryShortcut");
+    const openAllSongsShortcut = document.getElementById("openAllSongsShortcut");
+    const allSongsWindow = document.getElementById("allSongsWindow");
+    const allSongsWindowBar = document.getElementById("allSongsWindowBar");
+    const allSongsFrame = document.getElementById("allSongsFrame");
+    const minimizeAllSongs = document.getElementById("minimizeAllSongs");
+    const closeAllSongs = document.getElementById("closeAllSongs");
+    const allSongsTaskbar = document.getElementById("allSongsTaskbar");
     const toggleButton = document.getElementById("toggle");
     const loopButton = document.getElementById("loop");
     const loopControl = document.getElementById("loopControl");
@@ -623,6 +791,7 @@
     document.body.append(trackMenu);
     const trackWindowBar = document.getElementById("trackWindowBar");
     const minimizeLibrary = document.getElementById("minimizeLibrary");
+    const closeLibrary = document.getElementById("closeLibrary");
     const minimizedLibrary = document.getElementById("minimizedLibrary");
     const queueCount = document.getElementById("queueCount");
     const queueList = document.getElementById("queueList");
@@ -738,9 +907,11 @@
     let windowPositioned = false;
     let dragOffset = null;
     let playerDragOffset = null;
+    let allSongsDragOffset = null;
+    let allSongsMinimizeTimer = null;
 
     function minimizePlayerWindow() {
-      if (musicPlayer.classList.contains("is-minimized") || musicPlayer.classList.contains("minimizing")) return;
+      if (musicPlayer.classList.contains("is-minimized") || musicPlayer.classList.contains("is-closed") || musicPlayer.classList.contains("minimizing")) return;
       const playerRect = musicPlayer.getBoundingClientRect();
       const dockRect = minimizedPlayer.getBoundingClientRect();
       musicPlayer.style.setProperty("--player-min-x", `${dockRect.left + dockRect.width / 2 - (playerRect.left + playerRect.width / 2)}px`);
@@ -750,17 +921,110 @@
       window.setTimeout(() => {
         musicPlayer.classList.remove("minimizing");
         musicPlayer.classList.add("is-minimized");
-        minimizedPlayer.classList.add("visible");
+        minimizedPlayer.classList.add("running");
+        minimizedPlayer.setAttribute("aria-pressed", "true");
       }, 300);
     }
 
     function restorePlayerWindow() {
+      musicPlayer.classList.remove("is-closed");
       musicPlayer.classList.remove("is-minimized");
-      minimizedPlayer.classList.remove("visible");
+      minimizedPlayer.classList.add("running");
+      minimizedPlayer.setAttribute("aria-pressed", "true");
+    }
+
+    function closePlayerWindow() {
+      audio.pause();
+      audio.removeAttribute("src");
+      audio.load();
+      clearImportedSource();
+      currentFilename = null;
+      trackName.textContent = "No track selected";
+      status.textContent = "Paused";
+      setStoppedState();
+      updateProgress();
+      musicPlayer.classList.remove("is-minimized", "minimizing");
+      musicPlayer.classList.add("is-closed");
+      minimizedPlayer.classList.remove("running");
+      minimizedPlayer.setAttribute("aria-pressed", "false");
     }
 
     minimizePlayer.addEventListener("click", minimizePlayerWindow);
-    minimizedPlayer.addEventListener("click", restorePlayerWindow);
+    closePlayer.addEventListener("click", closePlayerWindow);
+    minimizedPlayer.addEventListener("click", () => {
+      if (musicPlayer.classList.contains("is-closed") || musicPlayer.classList.contains("is-minimized")) {
+        restorePlayerWindow();
+      } else {
+        minimizePlayerWindow();
+      }
+    });
+    openPlayerShortcut.addEventListener("click", restorePlayerWindow);
+
+    function openAllSongsWindow() {
+      window.clearTimeout(allSongsMinimizeTimer);
+      allSongsWindow.classList.remove("is-minimized", "minimizing");
+      allSongsWindow.classList.add("is-open");
+      if (!allSongsFrame.hasAttribute("src")) {
+        allSongsFrame.src = "https://www.musixmatch.com/";
+      }
+      allSongsTaskbar.classList.add("running");
+      allSongsTaskbar.setAttribute("aria-pressed", "true");
+    }
+
+    function minimizeAllSongsWindow() {
+      if (!allSongsWindow.classList.contains("is-open") || allSongsWindow.classList.contains("minimizing")) return;
+      const windowRect = allSongsWindow.getBoundingClientRect();
+      const taskbarRect = allSongsTaskbar.getBoundingClientRect();
+      allSongsWindow.style.setProperty("--all-songs-min-x", `${taskbarRect.left + taskbarRect.width / 2 - (windowRect.left + windowRect.width / 2)}px`);
+      allSongsWindow.style.setProperty("--all-songs-min-y", `${taskbarRect.top + taskbarRect.height / 2 - (windowRect.top + windowRect.height / 2)}px`);
+      allSongsWindow.classList.add("minimizing");
+      allSongsMinimizeTimer = window.setTimeout(() => {
+        allSongsWindow.classList.remove("is-open", "minimizing");
+        allSongsWindow.classList.add("is-minimized");
+      }, 300);
+    }
+
+    function closeAllSongsWindow() {
+      window.clearTimeout(allSongsMinimizeTimer);
+      allSongsWindow.classList.remove("is-open", "is-minimized", "minimizing");
+      allSongsFrame.removeAttribute("src");
+      allSongsTaskbar.classList.remove("running");
+      allSongsTaskbar.setAttribute("aria-pressed", "false");
+    }
+
+    openAllSongsShortcut.addEventListener("click", openAllSongsWindow);
+    minimizeAllSongs.addEventListener("click", minimizeAllSongsWindow);
+    closeAllSongs.addEventListener("click", closeAllSongsWindow);
+    allSongsTaskbar.addEventListener("click", () => {
+      if (allSongsWindow.classList.contains("minimizing")) {
+        openAllSongsWindow();
+      } else if (allSongsWindow.classList.contains("is-open")) {
+        minimizeAllSongsWindow();
+      } else {
+        openAllSongsWindow();
+      }
+    });
+
+    allSongsWindowBar.addEventListener("pointerdown", (event) => {
+      if (event.target.closest("button, a")) return;
+      const rect = allSongsWindow.getBoundingClientRect();
+      allSongsWindow.style.translate = "none";
+      allSongsWindow.style.left = `${rect.left}px`;
+      allSongsWindow.style.top = `${rect.top}px`;
+      allSongsDragOffset = { x: event.clientX - rect.left, y: event.clientY - rect.top };
+      allSongsWindowBar.setPointerCapture(event.pointerId);
+    });
+
+    allSongsWindowBar.addEventListener("pointermove", (event) => {
+      if (!allSongsDragOffset) return;
+      const left = Math.max(0, Math.min(innerWidth - allSongsWindow.offsetWidth, event.clientX - allSongsDragOffset.x));
+      const top = Math.max(0, Math.min(innerHeight - allSongsWindow.offsetHeight, event.clientY - allSongsDragOffset.y));
+      allSongsWindow.style.left = `${left}px`;
+      allSongsWindow.style.top = `${top}px`;
+    });
+
+    allSongsWindowBar.addEventListener("pointerup", () => { allSongsDragOffset = null; });
+    allSongsWindowBar.addEventListener("pointercancel", () => { allSongsDragOffset = null; });
 
     playerWindowBar.addEventListener("pointerdown", (event) => {
       if (event.target.closest("button")) return;
@@ -800,20 +1064,33 @@
     function openTrackMenu() {
       trackPicker.classList.add("open");
       trackMenu.classList.add("open");
-      minimizedLibrary.classList.remove("visible");
-      trackMenu.classList.remove("minimizing");
+      trackMenu.classList.remove("minimizing", "is-closed", "is-minimized");
       positionTrackMenu();
       trackSearch.setAttribute("aria-expanded", "true");
+      minimizedLibrary.classList.add("running");
+      minimizedLibrary.setAttribute("aria-pressed", "true");
     }
 
     function closeTrackMenu() {
       trackPicker.classList.remove("open");
       trackMenu.classList.remove("open");
       trackSearch.setAttribute("aria-expanded", "false");
+      if (!trackMenu.classList.contains("is-minimized")) {
+        minimizedLibrary.classList.remove("running");
+        minimizedLibrary.setAttribute("aria-pressed", "false");
+      }
+    }
+
+    function closeLibraryWindow() {
+      closeTrackMenu();
+      trackMenu.classList.remove("is-minimized", "minimizing");
+      trackMenu.classList.add("is-closed");
+      minimizedLibrary.classList.remove("running");
+      minimizedLibrary.setAttribute("aria-pressed", "false");
     }
 
     function minimizeTrackMenu() {
-      if (!trackPicker.classList.contains("open")) return;
+      if (!trackPicker.classList.contains("open") || trackMenu.classList.contains("minimizing")) return;
       const menuRect = trackMenu.getBoundingRect?.() || trackMenu.getBoundingClientRect();
       const dockRect = minimizedLibrary.getBoundingClientRect();
       const menuCenterX = menuRect.left + menuRect.width / 2;
@@ -825,9 +1102,11 @@
       trackMenu.classList.add("minimizing");
 
       window.setTimeout(() => {
+        trackMenu.classList.add("is-minimized");
         closeTrackMenu();
         trackMenu.classList.remove("minimizing");
-        minimizedLibrary.classList.add("visible");
+        minimizedLibrary.classList.add("running");
+        minimizedLibrary.setAttribute("aria-pressed", "true");
       }, 360);
     }
 
@@ -1033,7 +1312,15 @@
       if (!trackPicker.contains(event.target) && !trackMenu.contains(event.target)) closeTrackMenu();
     });
     minimizeLibrary.addEventListener("click", minimizeTrackMenu);
-    minimizedLibrary.addEventListener("click", openTrackMenu);
+    closeLibrary.addEventListener("click", closeLibraryWindow);
+    minimizedLibrary.addEventListener("click", () => {
+      if (trackMenu.classList.contains("open")) {
+        minimizeTrackMenu();
+      } else {
+        openTrackMenu();
+      }
+    });
+    openLibraryShortcut.addEventListener("click", openTrackMenu);
 
     trackWindowBar.addEventListener("pointerdown", (event) => {
       if (event.target.closest("button")) return;
