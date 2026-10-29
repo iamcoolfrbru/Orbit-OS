@@ -779,7 +779,7 @@
       <span class="window-title" id="classroomTitle">Classroom (g@m3s)</span>
       <div class="window-controls">
         <a class="external-window-link" href="https://classroom.teacher.homework.music.project.sandors.com/" target="_blank" rel="noopener noreferrer">Open site</a>
-        <button id="classroomHome" type="button" aria-label="Go to Classroom home" title="Home">Home</button>
+        <button id="classroomHome" type="button" aria-label="Go to Classroom home" title="Home"><span aria-hidden="true">&#x2302;</span></button>
         <button id="fullscreenClassroom" type="button" aria-label="Fullscreen Classroom (g@m3s)" title="Fullscreen">&#x26F6;</button>
         <button id="minimizeClassroom" type="button" aria-label="Minimize Classroom (g@m3s)" title="Minimize">&#8213;</button>
         <button id="closeClassroom" type="button" aria-label="Close Classroom (g@m3s)" title="Close">&#215;</button>
@@ -1205,7 +1205,6 @@
       classroomWindow.classList.add("is-open", "window-closing");
       classroomCloseTimer = window.setTimeout(() => {
         classroomWindow.classList.remove("is-open", "window-closing");
-        classroomFrame.removeAttribute("src");
         classroomCloseTimer = null;
       }, 200);
       classroomTaskbar.classList.remove("running");
