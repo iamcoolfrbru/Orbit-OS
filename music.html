@@ -759,6 +759,10 @@
       <span class="shortcut-icon" aria-hidden="true">▣</span>
       <span>Classroom (g@m3s)</span>
     </button>
+    <button class="desktop-shortcut" id="openProxyShortcut" type="button" aria-label="Open pr0xy">
+      <span class="shortcut-icon" aria-hidden="true">↗</span>
+      <span>pr0xy</span>
+    </button>
   </nav>
 
   <section class="external-window all-songs-window" id="allSongsWindow" role="dialog" aria-labelledby="allSongsTitle">
@@ -787,6 +791,19 @@
     <iframe class="all-songs-frame" id="classroomFrame" title="Classroom (g@m3s)" src="https://brainworxedu.github.io/" loading="eager" allow="fullscreen" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe>
   </section>
 
+  <section class="external-window" id="proxyWindow" role="dialog" aria-labelledby="proxyTitle">
+    <div class="window-bar all-songs-window-bar" id="proxyWindowBar">
+      <span class="window-title" id="proxyTitle">pr0xy</span>
+      <div class="window-controls">
+        <a class="external-window-link" href="https://chevrolet.autos/" target="_blank" rel="noopener noreferrer">Open site</a>
+        <button id="fullscreenProxy" type="button" aria-label="Fullscreen pr0xy" title="Fullscreen">&#x26F6;</button>
+        <button id="minimizeProxy" type="button" aria-label="Minimize pr0xy" title="Minimize">&#8213;</button>
+        <button id="closeProxy" type="button" aria-label="Close pr0xy" title="Close">&#215;</button>
+      </div>
+    </div>
+    <iframe class="all-songs-frame" id="proxyFrame" title="pr0xy" loading="lazy" allow="fullscreen" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe>
+  </section>
+
   <nav class="taskbar" aria-label="Taskbar">
     <button class="taskbar-app minimized-player running" id="minimizedPlayer" type="button" aria-label="Open or restore music player" aria-pressed="true">
       <span class="taskbar-icon" aria-hidden="true">♫</span>
@@ -803,6 +820,10 @@
     <button class="taskbar-app" id="classroomTaskbar" type="button" aria-label="Open or restore Classroom (g@m3s)" aria-pressed="false">
       <span class="taskbar-icon" aria-hidden="true">▣</span>
       <span>Classroom (g@m3s)</span>
+    </button>
+    <button class="taskbar-app" id="proxyTaskbar" type="button" aria-label="Open or restore pr0xy" aria-pressed="false">
+      <span class="taskbar-icon" aria-hidden="true">↗</span>
+      <span>pr0xy</span>
     </button>
   </nav>
 
@@ -831,6 +852,14 @@
     const minimizeClassroom = document.getElementById("minimizeClassroom");
     const closeClassroom = document.getElementById("closeClassroom");
     const classroomTaskbar = document.getElementById("classroomTaskbar");
+    const openProxyShortcut = document.getElementById("openProxyShortcut");
+    const proxyWindow = document.getElementById("proxyWindow");
+    const proxyWindowBar = document.getElementById("proxyWindowBar");
+    const proxyFrame = document.getElementById("proxyFrame");
+    const fullscreenProxy = document.getElementById("fullscreenProxy");
+    const minimizeProxy = document.getElementById("minimizeProxy");
+    const closeProxy = document.getElementById("closeProxy");
+    const proxyTaskbar = document.getElementById("proxyTaskbar");
     const toggleButton = document.getElementById("toggle");
     const loopButton = document.getElementById("loop");
     const loopControl = document.getElementById("loopControl");
@@ -975,6 +1004,9 @@
     let classroomDragOffset = null;
     let classroomMinimizeTimer = null;
     let classroomCloseTimer = null;
+    let proxyDragOffset = null;
+    let proxyMinimizeTimer = null;
+    let proxyCloseTimer = null;
 
     function minimizePlayerWindow() {
       if (musicPlayer.classList.contains("is-minimized") || musicPlayer.classList.contains("is-closed") || musicPlayer.classList.contains("minimizing") || musicPlayer.classList.contains("window-closing")) return;
@@ -1086,6 +1118,7 @@
     function syncExternalFullscreenButtons() {
       updateFullscreenButton(fullscreenAllSongs, allSongsWindow, allSongsFrame, "Musixmatch");
       updateFullscreenButton(fullscreenClassroom, classroomWindow, classroomFrame, "Classroom (g@m3s)");
+      updateFullscreenButton(fullscreenProxy, proxyWindow, proxyFrame, "pr0xy");
     }
 
     fullscreenAllSongs.addEventListener("click", () => {
@@ -1093,6 +1126,9 @@
     });
     fullscreenClassroom.addEventListener("click", () => {
       toggleExternalFullscreen(classroomWindow, classroomFrame, fullscreenClassroom, "Classroom (g@m3s)");
+    });
+    fullscreenProxy.addEventListener("click", () => {
+      toggleExternalFullscreen(proxyWindow, proxyFrame, fullscreenProxy, "pr0xy");
     });
     document.addEventListener("fullscreenchange", syncExternalFullscreenButtons);
 
@@ -1242,6 +1278,92 @@
 
     classroomWindowBar.addEventListener("pointerup", () => { classroomDragOffset = null; });
     classroomWindowBar.addEventListener("pointercancel", () => { classroomDragOffset = null; });
+
+    function openProxyWindow() {
+      window.clearTimeout(proxyMinimizeTimer);
+      window.clearTimeout(proxyCloseTimer);
+      const needsOpening = !proxyWindow.classList.contains("is-open") ||
+        proxyWindow.classList.contains("window-closing") ||
+        proxyWindow.classList.contains("minimizing");
+      proxyWindow.classList.remove("is-minimized", "minimizing", "window-closing", "window-opening");
+      proxyWindow.classList.add("is-open");
+      if (needsOpening) {
+        proxyWindow.classList.add("window-opening");
+        window.setTimeout(() => proxyWindow.classList.remove("window-opening"), 240);
+      }
+      if (!proxyFrame.hasAttribute("src")) {
+        proxyFrame.src = "https://chevrolet.autos/";
+      }
+      proxyTaskbar.classList.add("running");
+      proxyTaskbar.setAttribute("aria-pressed", "true");
+    }
+
+    function minimizeProxyWindow() {
+      if (!proxyWindow.classList.contains("is-open") || proxyWindow.classList.contains("minimizing") || proxyWindow.classList.contains("window-closing")) return;
+      const windowRect = proxyWindow.getBoundingClientRect();
+      const taskbarRect = proxyTaskbar.getBoundingClientRect();
+      proxyWindow.style.setProperty("--all-songs-min-x", `${taskbarRect.left + taskbarRect.width / 2 - (windowRect.left + windowRect.width / 2)}px`);
+      proxyWindow.style.setProperty("--all-songs-min-y", `${taskbarRect.top + taskbarRect.height / 2 - (windowRect.top + windowRect.height / 2)}px`);
+      proxyWindow.classList.add("minimizing");
+      proxyMinimizeTimer = window.setTimeout(() => {
+        proxyMinimizeTimer = null;
+        if (!proxyWindow.classList.contains("minimizing")) return;
+        proxyWindow.classList.remove("is-open", "minimizing");
+        proxyWindow.classList.add("is-minimized");
+      }, 300);
+    }
+
+    function closeProxyWindow() {
+      window.clearTimeout(proxyMinimizeTimer);
+      if (!proxyWindow.classList.contains("is-open") && !proxyWindow.classList.contains("is-minimized")) return;
+      window.clearTimeout(proxyCloseTimer);
+      if (document.fullscreenElement === proxyWindow || document.fullscreenElement === proxyFrame) {
+        document.exitFullscreen();
+      }
+      proxyWindow.classList.remove("is-minimized", "minimizing", "window-opening");
+      proxyWindow.classList.add("is-open", "window-closing");
+      proxyCloseTimer = window.setTimeout(() => {
+        proxyWindow.classList.remove("is-open", "window-closing");
+        proxyFrame.removeAttribute("src");
+        proxyCloseTimer = null;
+      }, 200);
+      proxyTaskbar.classList.remove("running");
+      proxyTaskbar.setAttribute("aria-pressed", "false");
+    }
+
+    openProxyShortcut.addEventListener("click", openProxyWindow);
+    minimizeProxy.addEventListener("click", minimizeProxyWindow);
+    closeProxy.addEventListener("click", closeProxyWindow);
+    proxyTaskbar.addEventListener("click", () => {
+      if (proxyWindow.classList.contains("minimizing") || proxyWindow.classList.contains("window-closing")) {
+        openProxyWindow();
+      } else if (proxyWindow.classList.contains("is-open")) {
+        minimizeProxyWindow();
+      } else {
+        openProxyWindow();
+      }
+    });
+
+    proxyWindowBar.addEventListener("pointerdown", (event) => {
+      if (event.target.closest("button, a")) return;
+      const rect = proxyWindow.getBoundingClientRect();
+      proxyWindow.style.translate = "none";
+      proxyWindow.style.left = `${rect.left}px`;
+      proxyWindow.style.top = `${rect.top}px`;
+      proxyDragOffset = { x: event.clientX - rect.left, y: event.clientY - rect.top };
+      proxyWindowBar.setPointerCapture(event.pointerId);
+    });
+
+    proxyWindowBar.addEventListener("pointermove", (event) => {
+      if (!proxyDragOffset) return;
+      const left = Math.max(0, Math.min(innerWidth - proxyWindow.offsetWidth, event.clientX - proxyDragOffset.x));
+      const top = Math.max(0, Math.min(innerHeight - proxyWindow.offsetHeight, event.clientY - proxyDragOffset.y));
+      proxyWindow.style.left = `${left}px`;
+      proxyWindow.style.top = `${top}px`;
+    });
+
+    proxyWindowBar.addEventListener("pointerup", () => { proxyDragOffset = null; });
+    proxyWindowBar.addEventListener("pointercancel", () => { proxyDragOffset = null; });
 
     playerWindowBar.addEventListener("pointerdown", (event) => {
       if (event.target.closest("button")) return;
