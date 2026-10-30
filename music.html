@@ -494,6 +494,13 @@
     }
 
     .window-controls button:hover { background: rgba(139, 233, 253, 0.16); }
+    .window-controls button.external-home-button {
+      display: grid;
+      width: 38px;
+      place-items: center;
+      padding: 0;
+    }
+    .external-home-button svg { width: 18px; height: 18px; fill: currentColor; }
 
     .track-menu-list {
       max-height: min(242px, 45vh);
@@ -772,6 +779,9 @@
     <div class="window-bar all-songs-window-bar" id="classroomWindowBar">
       <span class="window-title" id="classroomTitle">Classroom (g@m3s)</span>
       <div class="window-controls">
+        <button class="external-home-button" id="classroomHome" type="button" aria-label="Go to Classroom home" title="Home">
+          <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 3 2 12h3v9h6v-6h2v6h6v-9h3L12 3z"></path></svg>
+        </button>
         <button id="fullscreenClassroom" type="button" aria-label="Fullscreen Classroom (g@m3s)" title="Fullscreen">&#x26F6;</button>
         <button id="minimizeClassroom" type="button" aria-label="Minimize Classroom (g@m3s)" title="Minimize">&#8213;</button>
         <button id="closeClassroom" type="button" aria-label="Close Classroom (g@m3s)" title="Close">&#215;</button>
@@ -784,6 +794,9 @@
     <div class="window-bar all-songs-window-bar" id="proxyWindowBar">
       <span class="window-title" id="proxyTitle">pr0xy</span>
       <div class="window-controls">
+        <button class="external-home-button" id="proxyHome" type="button" aria-label="Go to pr0xy home" title="Home">
+          <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 3 2 12h3v9h6v-6h2v6h6v-9h3L12 3z"></path></svg>
+        </button>
         <button id="fullscreenProxy" type="button" aria-label="Fullscreen pr0xy" title="Fullscreen">&#x26F6;</button>
         <button id="minimizeProxy" type="button" aria-label="Minimize pr0xy" title="Minimize">&#8213;</button>
         <button id="closeProxy" type="button" aria-label="Close pr0xy" title="Close">&#215;</button>
@@ -836,6 +849,8 @@
     const classroomWindow = document.getElementById("classroomWindow");
     const classroomWindowBar = document.getElementById("classroomWindowBar");
     const classroomFrame = document.getElementById("classroomFrame");
+    const classroomHomeUrl = "https://brainworxedu.github.io/";
+    const classroomHome = document.getElementById("classroomHome");
     const fullscreenClassroom = document.getElementById("fullscreenClassroom");
     const minimizeClassroom = document.getElementById("minimizeClassroom");
     const closeClassroom = document.getElementById("closeClassroom");
@@ -844,6 +859,8 @@
     const proxyWindow = document.getElementById("proxyWindow");
     const proxyWindowBar = document.getElementById("proxyWindowBar");
     const proxyFrame = document.getElementById("proxyFrame");
+    const proxyHomeUrl = "https://chevrolet.autos/";
+    const proxyHome = document.getElementById("proxyHome");
     const fullscreenProxy = document.getElementById("fullscreenProxy");
     const minimizeProxy = document.getElementById("minimizeProxy");
     const closeProxy = document.getElementById("closeProxy");
@@ -1195,7 +1212,7 @@
         window.setTimeout(() => classroomWindow.classList.remove("window-opening"), 240);
       }
       if (!classroomFrame.hasAttribute("src")) {
-        classroomFrame.src = "https://brainworxedu.github.io/";
+        classroomFrame.src = classroomHomeUrl;
       }
       classroomTaskbar.classList.add("running");
       classroomTaskbar.setAttribute("aria-pressed", "true");
@@ -1234,6 +1251,9 @@
     }
 
     openClassroomShortcut.addEventListener("click", openClassroomWindow);
+    classroomHome.addEventListener("click", () => {
+      classroomFrame.src = classroomHomeUrl;
+    });
     minimizeClassroom.addEventListener("click", minimizeClassroomWindow);
     closeClassroom.addEventListener("click", closeClassroomWindow);
     classroomTaskbar.addEventListener("click", () => {
@@ -1280,7 +1300,7 @@
         window.setTimeout(() => proxyWindow.classList.remove("window-opening"), 240);
       }
       if (!proxyFrame.hasAttribute("src")) {
-        proxyFrame.src = "https://chevrolet.autos/";
+        proxyFrame.src = proxyHomeUrl;
       }
       proxyTaskbar.classList.add("running");
       proxyTaskbar.setAttribute("aria-pressed", "true");
@@ -1320,6 +1340,9 @@
     }
 
     openProxyShortcut.addEventListener("click", openProxyWindow);
+    proxyHome.addEventListener("click", () => {
+      proxyFrame.src = proxyHomeUrl;
+    });
     minimizeProxy.addEventListener("click", minimizeProxyWindow);
     closeProxy.addEventListener("click", closeProxyWindow);
     proxyTaskbar.addEventListener("click", () => {
