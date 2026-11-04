@@ -1916,7 +1916,7 @@
     bassControl.addEventListener("input", () => {
       const bass = Number(bassControl.value);
       bassValue.textContent = `${bass}%`;
-      bassFilter.gain.value = bass * 6.0206 / 100;
+      bassFilter.gain.value = bass * 20 / 100;
     });
 
     audio.addEventListener("loadedmetadata", updateProgress);
