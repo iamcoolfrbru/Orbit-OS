@@ -642,24 +642,32 @@
       font: inherit;
     }
 
-    .volume {
+    .audio-controls {
       display: grid;
-      grid-template-columns: minmax(70px, 1fr) 42px;
-      align-items: center;
-      gap: 12px;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 16px;
       margin-top: 16px;
       padding-top: 12px;
       border-top: 1px solid rgba(255, 255, 255, 0.12);
+    }
+
+    .volume {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 42px;
+      align-items: center;
+      gap: 8px;
       color: rgba(255, 255, 255, 0.76);
       font-size: 0.72rem;
     }
 
     .volume strong { color: var(--gold); text-align: right; }
+    .volume input { grid-column: 1 / -1; width: 100%; min-width: 0; }
 
     @media (max-width: 420px) {
       .track { grid-template-columns: 40px minmax(0, 1fr); }
       .track button { grid-column: 1 / -1; }
       .search-row { grid-template-columns: 1fr; }
+      .audio-controls { grid-template-columns: 1fr; }
       .search-row > .loop-control,
       .search-row > .loop-control > button { width: 100%; }
       .loop-menu { left: 0; right: 0; width: auto; }
@@ -731,11 +739,18 @@
       <input id="file" type="file" accept=".mp3,.mp4,audio/mpeg,audio/mp4,video/mp4">
     </label>
 
-    <label class="volume">
-      <span>Volume</span>
-      <strong id="volumeValue">35%</strong>
-      <input id="volume" type="range" min="0" max="100" step="1" value="35" aria-label="Volume">
-    </label>
+    <div class="audio-controls">
+      <label class="volume">
+        <span>Volume</span>
+        <strong id="volumeValue">35%</strong>
+        <input id="volume" type="range" min="0" max="100" step="1" value="35" aria-label="Volume">
+      </label>
+      <label class="volume">
+        <span>Bass boost</span>
+        <strong id="bassValue">0%</strong>
+        <input id="bass" type="range" min="0" max="100" step="1" value="0" aria-label="Bass boost">
+      </label>
+    </div>
 
     <audio id="audio" preload="metadata" hidden></audio>
   </main>
@@ -833,6 +848,11 @@
 
   <script>
     const audio = document.getElementById("audio");
+    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    const bassFilter = audioContext.createBiquadFilter();
+    bassFilter.type = "lowshelf";
+    bassFilter.frequency.value = 120;
+    audioContext.createMediaElementSource(audio).connect(bassFilter).connect(audioContext.destination);
     const musicPlayer = document.getElementById("musicPlayer");
     const playerWindowBar = document.getElementById("playerWindowBar");
     const minimizePlayer = document.getElementById("minimizePlayer");
@@ -875,6 +895,8 @@
     const loopMenu = document.getElementById("loopMenu");
     const volumeControl = document.getElementById("volume");
     const volumeValue = document.getElementById("volumeValue");
+    const bassControl = document.getElementById("bass");
+    const bassValue = document.getElementById("bassValue");
     const status = document.getElementById("status");
     const trackName = document.getElementById("trackName");
     const progressControl = document.getElementById("progress");
@@ -1583,6 +1605,7 @@
       }
 
       try {
+        await audioContext.resume();
         await audio.play();
         toggleButton.textContent = "Pause";
         toggleButton.setAttribute("aria-pressed", "true");
@@ -1657,10 +1680,15 @@
       closeTrackMenu();
       renderQueue();
       audio.load();
-      if (autoplay) audio.play().catch(() => {
-        status.textContent = "Unable to play this file in your browser";
-        setStoppedState();
-      });
+      if (autoplay) {
+        try {
+          await audioContext.resume();
+          await audio.play();
+        } catch (error) {
+          status.textContent = "Unable to play this file in your browser";
+          setStoppedState();
+        }
+      }
     }
 
     function selectTrack(filename, title) {
@@ -1766,6 +1794,12 @@
       const volume = Number(volumeControl.value);
       volumeValue.textContent = `${volume}%`;
       audio.volume = volume / 100;
+    });
+
+    bassControl.addEventListener("input", () => {
+      const bass = Number(bassControl.value);
+      bassValue.textContent = `${bass}%`;
+      bassFilter.gain.value = bass * 6.0206 / 100;
     });
 
     audio.addEventListener("loadedmetadata", updateProgress);
