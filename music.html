@@ -797,6 +797,9 @@
         <button class="external-home-button" id="proxyHome" type="button" aria-label="Go to pr0xy home" title="Home">
           <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 3 2 12h3v9h6v-6h2v6h6v-9h3L12 3z"></path></svg>
         </button>
+        <button class="external-home-button" id="openProxyExternal" type="button" aria-label="Open pr0xy home in a new tab" title="Open in new tab">
+          <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M14 3h7v7M21 3 10 14M19 14v6H4V5h6" fill="none" stroke="currentColor" stroke-width="2"></path></svg>
+        </button>
         <button id="fullscreenProxy" type="button" aria-label="Fullscreen pr0xy" title="Fullscreen">&#x26F6;</button>
         <button id="minimizeProxy" type="button" aria-label="Minimize pr0xy" title="Minimize">&#8213;</button>
         <button id="closeProxy" type="button" aria-label="Close pr0xy" title="Close">&#215;</button>
@@ -861,6 +864,7 @@
     const proxyFrame = document.getElementById("proxyFrame");
     const proxyHomeUrl = "https://chevrolet.autos/";
     const proxyHome = document.getElementById("proxyHome");
+    const openProxyExternal = document.getElementById("openProxyExternal");
     const fullscreenProxy = document.getElementById("fullscreenProxy");
     const minimizeProxy = document.getElementById("minimizeProxy");
     const closeProxy = document.getElementById("closeProxy");
@@ -920,7 +924,11 @@
       "twenty four.mp3",
       "unhappy.mp3",
       "would u notice.mp3",
-      "you are my friend.mp3"
+      "you are my friend.mp3",
+      "Alquimia da Saudade.mp3",
+      "Fine.mp3",
+      "Shape of Netanyahu.mp3",
+      "leaveamsg - slowed.mp3"
     ];
 
     const trackTitles = {};
@@ -1342,6 +1350,9 @@
     openProxyShortcut.addEventListener("click", openProxyWindow);
     proxyHome.addEventListener("click", () => {
       proxyFrame.src = proxyHomeUrl;
+    });
+    openProxyExternal.addEventListener("click", () => {
+      window.open(proxyHomeUrl, "_blank", "noopener,noreferrer");
     });
     minimizeProxy.addEventListener("click", minimizeProxyWindow);
     closeProxy.addEventListener("click", closeProxyWindow);
