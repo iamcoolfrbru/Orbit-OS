@@ -663,6 +663,27 @@
     .volume strong { color: var(--gold); text-align: right; }
     .volume input { grid-column: 1 / -1; width: 100%; min-width: 0; }
 
+    .spectrum {
+      margin-top: 14px;
+      padding-top: 11px;
+      border-top: 1px solid rgba(255, 255, 255, 0.12);
+    }
+
+    .spectrum-heading,
+    .spectrum-bands {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      align-items: center;
+    }
+
+    .spectrum-heading { grid-template-columns: 1fr auto; }
+    .spectrum-heading h2 { margin: 0; font-size: 0.72rem; font-weight: 500; }
+    .spectrum-heading span { color: var(--cyan); font-size: 0.62rem; text-transform: uppercase; }
+    .spectrum-plot { display: block; width: 100%; height: 68px; margin-top: 8px; }
+    .spectrum-bands { margin-top: 4px; color: rgba(255, 255, 255, 0.62); font-size: 0.6rem; }
+    .spectrum-bands span:nth-child(2) { text-align: center; }
+    .spectrum-bands span:last-child { text-align: right; }
+
     @media (max-width: 420px) {
       .track { grid-template-columns: 40px minmax(0, 1fr); }
       .track button { grid-column: 1 / -1; }
@@ -751,6 +772,19 @@
         <input id="bass" type="range" min="0" max="100" step="1" value="0" aria-label="Bass boost">
       </label>
     </div>
+
+    <section class="spectrum" aria-label="Music stats viewer">
+      <div class="spectrum-heading">
+        <h2>Music stats</h2>
+        <span id="spectrumState">Waiting</span>
+      </div>
+      <canvas class="spectrum-plot" id="spectrumPlot" width="800" height="136" role="img" aria-label="Live frequency bars from bass to treble"></canvas>
+      <div class="spectrum-bands" aria-hidden="true">
+        <span>Bass</span>
+        <span>Mids</span>
+        <span>Treble</span>
+      </div>
+    </section>
 
     <audio id="audio" preload="metadata" hidden></audio>
   </main>
@@ -850,9 +884,12 @@
     const audio = document.getElementById("audio");
     const audioContext = new (window.AudioContext || window.webkitAudioContext)();
     const bassFilter = audioContext.createBiquadFilter();
+    const analyser = audioContext.createAnalyser();
     bassFilter.type = "lowshelf";
     bassFilter.frequency.value = 120;
-    audioContext.createMediaElementSource(audio).connect(bassFilter).connect(audioContext.destination);
+    analyser.fftSize = 2048;
+    analyser.smoothingTimeConstant = 0.78;
+    audioContext.createMediaElementSource(audio).connect(bassFilter).connect(analyser).connect(audioContext.destination);
     const musicPlayer = document.getElementById("musicPlayer");
     const playerWindowBar = document.getElementById("playerWindowBar");
     const minimizePlayer = document.getElementById("minimizePlayer");
@@ -897,6 +934,11 @@
     const volumeValue = document.getElementById("volumeValue");
     const bassControl = document.getElementById("bass");
     const bassValue = document.getElementById("bassValue");
+    const spectrumCanvas = document.getElementById("spectrumPlot");
+    const spectrumContext = spectrumCanvas.getContext("2d");
+    const spectrumState = document.getElementById("spectrumState");
+    const frequencyData = new Uint8Array(analyser.frequencyBinCount);
+    let spectrumFrame = 0;
     const status = document.getElementById("status");
     const trackName = document.getElementById("trackName");
     const progressControl = document.getElementById("progress");
@@ -1584,6 +1626,81 @@
       toggleButton.setAttribute("aria-pressed", "false");
     }
 
+    function renderSpectrum(isPlaying) {
+      const bounds = spectrumCanvas.getBoundingClientRect();
+      if (!bounds.width || !bounds.height) return;
+
+      const pixelRatio = window.devicePixelRatio || 1;
+      const pixelWidth = Math.round(bounds.width * pixelRatio);
+      const pixelHeight = Math.round(bounds.height * pixelRatio);
+      if (spectrumCanvas.width !== pixelWidth || spectrumCanvas.height !== pixelHeight) {
+        spectrumCanvas.width = pixelWidth;
+        spectrumCanvas.height = pixelHeight;
+        spectrumContext.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
+      }
+
+      if (isPlaying) analyser.getByteFrequencyData(frequencyData);
+      else frequencyData.fill(0);
+
+      const width = bounds.width;
+      const height = bounds.height;
+      const barCount = 30;
+      const barGap = 3;
+      const barWidth = (width - barGap * (barCount - 1)) / barCount;
+      const minFrequency = 35;
+      const maxFrequency = Math.min(16000, audioContext.sampleRate / 2);
+      const frequencyRatio = maxFrequency / minFrequency;
+      const gradient = spectrumContext.createLinearGradient(0, 0, width, 0);
+      gradient.addColorStop(0, "#f4d77a");
+      gradient.addColorStop(0.42, "#8be9fd");
+      gradient.addColorStop(1, "#ff9b78");
+
+      spectrumContext.clearRect(0, 0, width, height);
+      spectrumContext.fillStyle = "rgba(139, 233, 253, 0.1)";
+      for (let guide = 1; guide <= 3; guide += 1) {
+        spectrumContext.fillRect(0, Math.round(height * guide / 4), width, 1);
+      }
+
+      for (let bar = 0; bar < barCount; bar += 1) {
+        const lowFrequency = minFrequency * frequencyRatio ** (bar / barCount);
+        const highFrequency = minFrequency * frequencyRatio ** ((bar + 1) / barCount);
+        const firstBin = Math.max(1, Math.floor(lowFrequency * analyser.fftSize / audioContext.sampleRate));
+        const lastBin = Math.max(firstBin + 1, Math.ceil(highFrequency * analyser.fftSize / audioContext.sampleRate));
+        let total = 0;
+        let samples = 0;
+        for (let bin = firstBin; bin < Math.min(lastBin, frequencyData.length); bin += 1) {
+          total += frequencyData[bin];
+          samples += 1;
+        }
+
+        const level = samples ? total / samples : 0;
+        const barHeight = Math.max(2, level / 255 * (height - 4));
+        spectrumContext.globalAlpha = 0.55 + level / 255 * 0.45;
+        spectrumContext.fillStyle = gradient;
+        spectrumContext.fillRect(bar * (barWidth + barGap), height - barHeight, barWidth, barHeight);
+      }
+      spectrumContext.globalAlpha = 1;
+    }
+
+    function animateSpectrum() {
+      renderSpectrum(true);
+      spectrumFrame = requestAnimationFrame(animateSpectrum);
+    }
+
+    function startSpectrum() {
+      spectrumState.textContent = "Live";
+      if (!spectrumFrame) animateSpectrum();
+    }
+
+    function stopSpectrum() {
+      cancelAnimationFrame(spectrumFrame);
+      spectrumFrame = 0;
+      spectrumState.textContent = "Paused";
+      renderSpectrum(false);
+    }
+
+    renderSpectrum(false);
+
     function clearImportedSource() {
       if (importedUrl) {
         URL.revokeObjectURL(importedUrl);
@@ -1806,15 +1923,18 @@
     audio.addEventListener("durationchange", updateProgress);
     audio.addEventListener("timeupdate", updateProgress);
     audio.addEventListener("play", () => {
+      startSpectrum();
       toggleButton.textContent = "Pause";
       toggleButton.setAttribute("aria-pressed", "true");
       status.textContent = "Playing";
     });
     audio.addEventListener("pause", () => {
+      stopSpectrum();
       if (!audio.ended) status.textContent = "Paused";
       setStoppedState();
     });
     audio.addEventListener("ended", () => {
+      stopSpectrum();
       if (loopMode !== "track" && currentFilename) {
         const currentIndex = trackChoices.findIndex((track) => track.filename === currentFilename);
         const nextChoice = trackChoices[currentIndex + 1];
@@ -1831,6 +1951,7 @@
       status.textContent = "Finished";
     });
     audio.addEventListener("error", () => {
+      stopSpectrum();
       if (audio.hasAttribute("src")) {
         setStoppedState();
         status.textContent = "Unable to load this file";
