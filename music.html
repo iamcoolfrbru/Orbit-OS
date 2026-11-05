@@ -1606,6 +1606,7 @@
     let importedUrl = null;
     let loopMode = "off";
     let currentFilename = null;
+    let isSeekPending = false;
 
     function renderQueue() {
       queueList.replaceChildren();
@@ -1640,15 +1641,20 @@
 
     function updateProgress() {
       const canSeek = Number.isFinite(audio.duration) && audio.duration > 0;
+      const displayedTime = isSeekPending && canSeek
+        ? (Number(progressControl.value) / 1000) * audio.duration
+        : audio.currentTime;
       progressControl.disabled = !canSeek;
-      progressControl.value = canSeek
-        ? String(Math.round((audio.currentTime / audio.duration) * 1000))
-        : "0";
-      elapsed.textContent = formatTime(audio.currentTime);
+      if (!isSeekPending) {
+        progressControl.value = canSeek
+          ? String(Math.round((audio.currentTime / audio.duration) * 1000))
+          : "0";
+      }
+      elapsed.textContent = formatTime(displayedTime);
       duration.textContent = formatTime(audio.duration);
       progressControl.setAttribute(
         "aria-valuetext",
-        `${formatTime(audio.currentTime)} of ${formatTime(audio.duration)}`
+        `${formatTime(displayedTime)} of ${formatTime(audio.duration)}`
       );
     }
 
@@ -1801,6 +1807,7 @@
 
     async function playTrack(filename, title, autoplay = false, imported = false) {
       audio.pause();
+      isSeekPending = false;
       clearImportedSource();
       currentFilename = filename;
 
@@ -1933,7 +1940,9 @@
 
     progressControl.addEventListener("input", () => {
       if (Number.isFinite(audio.duration)) {
-        audio.currentTime = (Number(progressControl.value) / 1000) * audio.duration;
+        const seekTime = (Number(progressControl.value) / 1000) * audio.duration;
+        isSeekPending = seekTime !== audio.currentTime;
+        audio.currentTime = seekTime;
         updateProgress();
       }
     });
@@ -1968,6 +1977,10 @@
     audio.addEventListener("loadedmetadata", updateProgress);
     audio.addEventListener("durationchange", updateProgress);
     audio.addEventListener("timeupdate", updateProgress);
+    audio.addEventListener("seeked", () => {
+      isSeekPending = false;
+      updateProgress();
+    });
     audio.addEventListener("play", () => {
       startSpectrum();
       toggleButton.textContent = "Pause";
