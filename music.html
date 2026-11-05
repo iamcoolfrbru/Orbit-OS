@@ -768,8 +768,18 @@
       </label>
       <label class="volume">
         <span>Bass boost</span>
-        <strong id="bassValue">0%</strong>
-        <input id="bass" type="range" min="0" max="100" step="1" value="0" aria-label="Bass boost">
+        <strong id="bassValue">0 dB</strong>
+        <input id="bass" type="range" min="0" max="50" step="1" value="0" aria-label="Bass boost in decibels">
+      </label>
+      <label class="volume">
+        <span>Mid boost</span>
+        <strong id="midValue">0 dB</strong>
+        <input id="mid" type="range" min="0" max="50" step="1" value="0" aria-label="Mid boost in decibels">
+      </label>
+      <label class="volume">
+        <span>Treble boost</span>
+        <strong id="trebleValue">0 dB</strong>
+        <input id="treble" type="range" min="0" max="50" step="1" value="0" aria-label="Treble boost in decibels">
       </label>
     </div>
 
@@ -884,12 +894,29 @@
     const audio = document.getElementById("audio");
     const audioContext = new (window.AudioContext || window.webkitAudioContext)();
     const bassFilter = audioContext.createBiquadFilter();
+    const bassFilterStage2 = audioContext.createBiquadFilter();
+    const midFilter = audioContext.createBiquadFilter();
+    const midFilterStage2 = audioContext.createBiquadFilter();
+    const trebleFilter = audioContext.createBiquadFilter();
+    const trebleFilterStage2 = audioContext.createBiquadFilter();
     const analyser = audioContext.createAnalyser();
     bassFilter.type = "lowshelf";
     bassFilter.frequency.value = 120;
+    bassFilterStage2.type = "lowshelf";
+    bassFilterStage2.frequency.value = 120;
+    midFilter.type = "peaking";
+    midFilter.frequency.value = 1000;
+    midFilter.Q.value = 1;
+    midFilterStage2.type = "peaking";
+    midFilterStage2.frequency.value = 1000;
+    midFilterStage2.Q.value = 1;
+    trebleFilter.type = "highshelf";
+    trebleFilter.frequency.value = 4000;
+    trebleFilterStage2.type = "highshelf";
+    trebleFilterStage2.frequency.value = 4000;
     analyser.fftSize = 2048;
     analyser.smoothingTimeConstant = 0.78;
-    audioContext.createMediaElementSource(audio).connect(bassFilter).connect(analyser).connect(audioContext.destination);
+    audioContext.createMediaElementSource(audio).connect(bassFilter).connect(bassFilterStage2).connect(midFilter).connect(midFilterStage2).connect(trebleFilter).connect(trebleFilterStage2).connect(analyser).connect(audioContext.destination);
     const musicPlayer = document.getElementById("musicPlayer");
     const playerWindowBar = document.getElementById("playerWindowBar");
     const minimizePlayer = document.getElementById("minimizePlayer");
@@ -934,6 +961,10 @@
     const volumeValue = document.getElementById("volumeValue");
     const bassControl = document.getElementById("bass");
     const bassValue = document.getElementById("bassValue");
+    const midControl = document.getElementById("mid");
+    const midValue = document.getElementById("midValue");
+    const trebleControl = document.getElementById("treble");
+    const trebleValue = document.getElementById("trebleValue");
     const spectrumCanvas = document.getElementById("spectrumPlot");
     const spectrumContext = spectrumCanvas.getContext("2d");
     const spectrumState = document.getElementById("spectrumState");
@@ -1915,8 +1946,23 @@
 
     bassControl.addEventListener("input", () => {
       const bass = Number(bassControl.value);
-      bassValue.textContent = `${bass}%`;
-      bassFilter.gain.value = bass * 20 / 100;
+      bassValue.textContent = `${bass} dB`;
+      bassFilter.gain.value = bass / 2;
+      bassFilterStage2.gain.value = bass / 2;
+    });
+
+    midControl.addEventListener("input", () => {
+      const mid = Number(midControl.value);
+      midValue.textContent = `${mid} dB`;
+      midFilter.gain.value = mid / 2;
+      midFilterStage2.gain.value = mid / 2;
+    });
+
+    trebleControl.addEventListener("input", () => {
+      const treble = Number(trebleControl.value);
+      trebleValue.textContent = `${treble} dB`;
+      trebleFilter.gain.value = treble / 2;
+      trebleFilterStage2.gain.value = treble / 2;
     });
 
     audio.addEventListener("loadedmetadata", updateProgress);
