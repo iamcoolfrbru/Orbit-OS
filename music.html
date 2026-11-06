@@ -820,6 +820,10 @@
       <span class="shortcut-icon" aria-hidden="true">↗</span>
       <span>pr0xy</span>
     </button>
+    <button class="desktop-shortcut" id="openFivePlayShortcut" type="button" aria-label="Open FivePlay">
+      <span class="shortcut-icon" aria-hidden="true">5</span>
+      <span>FivePlay</span>
+    </button>
   </nav>
 
   <section class="external-window all-songs-window" id="allSongsWindow" role="dialog" aria-labelledby="allSongsTitle">
@@ -867,6 +871,21 @@
     <iframe class="all-songs-frame" id="proxyFrame" title="pr0xy" loading="lazy" sandbox="allow-scripts allow-same-origin allow-forms" allow="fullscreen" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe>
   </section>
 
+  <section class="external-window" id="fivePlayWindow" role="dialog" aria-labelledby="fivePlayTitle">
+    <div class="window-bar all-songs-window-bar" id="fivePlayWindowBar">
+      <span class="window-title" id="fivePlayTitle">FivePlay</span>
+      <div class="window-controls">
+        <button class="external-home-button" id="fivePlayHome" type="button" aria-label="Go to FivePlay home" title="Home">
+          <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 3 2 12h3v9h6v-6h2v6h6v-9h3L12 3z"></path></svg>
+        </button>
+        <button id="fullscreenFivePlay" type="button" aria-label="Fullscreen FivePlay" title="Fullscreen">&#x26F6;</button>
+        <button id="minimizeFivePlay" type="button" aria-label="Minimize FivePlay" title="Minimize">&#8213;</button>
+        <button id="closeFivePlay" type="button" aria-label="Close FivePlay" title="Close">&#215;</button>
+      </div>
+    </div>
+    <iframe class="all-songs-frame" id="fivePlayFrame" title="FivePlay" loading="lazy" sandbox="allow-scripts allow-same-origin allow-forms" allow="fullscreen" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe>
+  </section>
+
   <nav class="taskbar" aria-label="Taskbar">
     <button class="taskbar-app minimized-player running" id="minimizedPlayer" type="button" aria-label="Open or restore music player" aria-pressed="true">
       <span class="taskbar-icon" aria-hidden="true">♫</span>
@@ -887,6 +906,10 @@
     <button class="taskbar-app" id="proxyTaskbar" type="button" aria-label="Open or restore pr0xy" aria-pressed="false">
       <span class="taskbar-icon" aria-hidden="true">↗</span>
       <span>pr0xy</span>
+    </button>
+    <button class="taskbar-app" id="fivePlayTaskbar" type="button" aria-label="Open or restore FivePlay" aria-pressed="false">
+      <span class="taskbar-icon" aria-hidden="true">5</span>
+      <span>FivePlay</span>
     </button>
   </nav>
 
@@ -953,6 +976,16 @@
     const minimizeProxy = document.getElementById("minimizeProxy");
     const closeProxy = document.getElementById("closeProxy");
     const proxyTaskbar = document.getElementById("proxyTaskbar");
+    const openFivePlayShortcut = document.getElementById("openFivePlayShortcut");
+    const fivePlayWindow = document.getElementById("fivePlayWindow");
+    const fivePlayWindowBar = document.getElementById("fivePlayWindowBar");
+    const fivePlayFrame = document.getElementById("fivePlayFrame");
+    const fivePlayHomeUrl = "https://fiveplay.lol/";
+    const fivePlayHome = document.getElementById("fivePlayHome");
+    const fullscreenFivePlay = document.getElementById("fullscreenFivePlay");
+    const minimizeFivePlay = document.getElementById("minimizeFivePlay");
+    const closeFivePlay = document.getElementById("closeFivePlay");
+    const fivePlayTaskbar = document.getElementById("fivePlayTaskbar");
     const toggleButton = document.getElementById("toggle");
     const loopButton = document.getElementById("loop");
     const loopControl = document.getElementById("loopControl");
@@ -1115,6 +1148,9 @@
     let proxyDragOffset = null;
     let proxyMinimizeTimer = null;
     let proxyCloseTimer = null;
+    let fivePlayDragOffset = null;
+    let fivePlayMinimizeTimer = null;
+    let fivePlayCloseTimer = null;
 
     function minimizePlayerWindow() {
       if (musicPlayer.classList.contains("is-minimized") || musicPlayer.classList.contains("is-closed") || musicPlayer.classList.contains("minimizing") || musicPlayer.classList.contains("window-closing")) return;
@@ -1227,6 +1263,7 @@
       updateFullscreenButton(fullscreenAllSongs, allSongsWindow, allSongsFrame, "Musixmatch");
       updateFullscreenButton(fullscreenClassroom, classroomWindow, classroomFrame, "Classroom (g@m3s)");
       updateFullscreenButton(fullscreenProxy, proxyWindow, proxyFrame, "pr0xy");
+      updateFullscreenButton(fullscreenFivePlay, fivePlayWindow, fivePlayFrame, "FivePlay");
     }
 
     fullscreenAllSongs.addEventListener("click", () => {
@@ -1237,6 +1274,9 @@
     });
     fullscreenProxy.addEventListener("click", () => {
       toggleExternalFullscreen(proxyWindow, proxyFrame, fullscreenProxy, "pr0xy");
+    });
+    fullscreenFivePlay.addEventListener("click", () => {
+      toggleExternalFullscreen(fivePlayWindow, fivePlayFrame, fullscreenFivePlay, "FivePlay");
     });
     document.addEventListener("fullscreenchange", syncExternalFullscreenButtons);
 
@@ -1481,6 +1521,95 @@
 
     proxyWindowBar.addEventListener("pointerup", () => { proxyDragOffset = null; });
     proxyWindowBar.addEventListener("pointercancel", () => { proxyDragOffset = null; });
+
+    function openFivePlayWindow() {
+      window.clearTimeout(fivePlayMinimizeTimer);
+      window.clearTimeout(fivePlayCloseTimer);
+      const needsOpening = !fivePlayWindow.classList.contains("is-open") ||
+        fivePlayWindow.classList.contains("window-closing") ||
+        fivePlayWindow.classList.contains("minimizing");
+      fivePlayWindow.classList.remove("is-minimized", "minimizing", "window-closing", "window-opening");
+      fivePlayWindow.classList.add("is-open");
+      if (needsOpening) {
+        fivePlayWindow.classList.add("window-opening");
+        window.setTimeout(() => fivePlayWindow.classList.remove("window-opening"), 240);
+      }
+      if (!fivePlayFrame.hasAttribute("src")) {
+        fivePlayFrame.src = fivePlayHomeUrl;
+      }
+      fivePlayTaskbar.classList.add("running");
+      fivePlayTaskbar.setAttribute("aria-pressed", "true");
+    }
+
+    function minimizeFivePlayWindow() {
+      if (!fivePlayWindow.classList.contains("is-open") || fivePlayWindow.classList.contains("minimizing") || fivePlayWindow.classList.contains("window-closing")) return;
+      const windowRect = fivePlayWindow.getBoundingClientRect();
+      const taskbarRect = fivePlayTaskbar.getBoundingClientRect();
+      fivePlayWindow.style.setProperty("--all-songs-min-x", `${taskbarRect.left + taskbarRect.width / 2 - (windowRect.left + windowRect.width / 2)}px`);
+      fivePlayWindow.style.setProperty("--all-songs-min-y", `${taskbarRect.top + taskbarRect.height / 2 - (windowRect.top + windowRect.height / 2)}px`);
+      fivePlayWindow.classList.add("minimizing");
+      fivePlayMinimizeTimer = window.setTimeout(() => {
+        fivePlayMinimizeTimer = null;
+        if (!fivePlayWindow.classList.contains("minimizing")) return;
+        fivePlayWindow.classList.remove("is-open", "minimizing");
+        fivePlayWindow.classList.add("is-minimized");
+      }, 300);
+    }
+
+    function closeFivePlayWindow() {
+      window.clearTimeout(fivePlayMinimizeTimer);
+      if (!fivePlayWindow.classList.contains("is-open") && !fivePlayWindow.classList.contains("is-minimized")) return;
+      window.clearTimeout(fivePlayCloseTimer);
+      if (document.fullscreenElement === fivePlayWindow || document.fullscreenElement === fivePlayFrame) {
+        document.exitFullscreen();
+      }
+      fivePlayWindow.classList.remove("is-minimized", "minimizing", "window-opening");
+      fivePlayWindow.classList.add("is-open", "window-closing");
+      fivePlayCloseTimer = window.setTimeout(() => {
+        fivePlayWindow.classList.remove("is-open", "window-closing");
+        fivePlayFrame.removeAttribute("src");
+        fivePlayCloseTimer = null;
+      }, 200);
+      fivePlayTaskbar.classList.remove("running");
+      fivePlayTaskbar.setAttribute("aria-pressed", "false");
+    }
+
+    openFivePlayShortcut.addEventListener("click", openFivePlayWindow);
+    fivePlayHome.addEventListener("click", () => {
+      fivePlayFrame.src = fivePlayHomeUrl;
+    });
+    minimizeFivePlay.addEventListener("click", minimizeFivePlayWindow);
+    closeFivePlay.addEventListener("click", closeFivePlayWindow);
+    fivePlayTaskbar.addEventListener("click", () => {
+      if (fivePlayWindow.classList.contains("minimizing") || fivePlayWindow.classList.contains("window-closing")) {
+        openFivePlayWindow();
+      } else if (fivePlayWindow.classList.contains("is-open")) {
+        minimizeFivePlayWindow();
+      } else {
+        openFivePlayWindow();
+      }
+    });
+
+    fivePlayWindowBar.addEventListener("pointerdown", (event) => {
+      if (event.target.closest("button, a")) return;
+      const rect = fivePlayWindow.getBoundingClientRect();
+      fivePlayWindow.style.translate = "none";
+      fivePlayWindow.style.left = `${rect.left}px`;
+      fivePlayWindow.style.top = `${rect.top}px`;
+      fivePlayDragOffset = { x: event.clientX - rect.left, y: event.clientY - rect.top };
+      fivePlayWindowBar.setPointerCapture(event.pointerId);
+    });
+
+    fivePlayWindowBar.addEventListener("pointermove", (event) => {
+      if (!fivePlayDragOffset) return;
+      const left = Math.max(0, Math.min(innerWidth - fivePlayWindow.offsetWidth, event.clientX - fivePlayDragOffset.x));
+      const top = Math.max(0, Math.min(innerHeight - fivePlayWindow.offsetHeight, event.clientY - fivePlayDragOffset.y));
+      fivePlayWindow.style.left = `${left}px`;
+      fivePlayWindow.style.top = `${top}px`;
+    });
+
+    fivePlayWindowBar.addEventListener("pointerup", () => { fivePlayDragOffset = null; });
+    fivePlayWindowBar.addEventListener("pointercancel", () => { fivePlayDragOffset = null; });
 
     playerWindowBar.addEventListener("pointerdown", (event) => {
       if (event.target.closest("button")) return;
